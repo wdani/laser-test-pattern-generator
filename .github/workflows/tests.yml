@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Python tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile main script
+        run: python -m py_compile makera_material_test_generator.py
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+
+      - name: Run generic NC CLI smoke test
+        run: |
+          mkdir -p tmp
+          python makera_material_test_generator.py \
+            --format NC \
+            --output tmp/smoke_test.nc \
+            --overwrite \
+            --rows 1 \
+            --cols 2 \
+            --speed-min 1000 \
+            --speed-max 1000 \
+            --power-min 20 \
+            --power-max 40 \
+            --tile-size 1 \
+            --gap 0 \
+            --grid-x 0 \
+            --grid-y 0 \
+            --no-auto-position \
+            --no-labels \
+            --nc-power-profile "Makera (0-1)"
+          grep "M3 S0.2" tmp/smoke_test.nc
+          grep "M3 S0.4" tmp/smoke_test.nc
