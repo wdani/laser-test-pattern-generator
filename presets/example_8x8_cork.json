@@ -14,5 +14,6 @@
   "labels_enabled": true,
   "language": "English",
   "output_format": "Both",
-  "nc_s_max": "1000"
+  "nc_power_profile": "Makera (0-1)",
+  "nc_s_max": "1"
 }
