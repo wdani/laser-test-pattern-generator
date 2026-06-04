@@ -13,6 +13,7 @@ makera_material_test_generated*.nc
 generated/
 output/
 outputs/
+examples/
 tmp/
 *.tmp
 *.bak

@@ -12,7 +12,7 @@ Highlights
 - Output modes for MKS, NC, or both.
 - English GUI.
 - Generated labels selectable between English and German.
-- Included Makera templates, JSON presets, and curated examples.
+- Included Makera templates and JSON presets.
 - Windows convenience launcher: start_gui_windows.bat.
 
 Linux/macOS Start

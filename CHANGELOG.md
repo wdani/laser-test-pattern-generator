@@ -19,7 +19,7 @@ First clean public release baseline.
 - English GUI.
 - English/German generated label language option.
 - Windows convenience launcher.
-- Public release documentation, safety notes, roadmap, examples, and ignore rules.
+- Public release documentation, safety notes, roadmap, and ignore rules.
 
 ### Notes
 

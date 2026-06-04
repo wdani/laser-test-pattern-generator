@@ -96,11 +96,10 @@ python makera_material_test_generator.py --format MKS --language Deutsch --outpu
 - `start_gui_windows.bat` - Windows convenience launcher.
 - `templates/` - Makera Studio template projects used by `.mks` generation.
 - `presets/` - compatible JSON presets for the GUI.
-- `examples/` - intentional sample output files.
 - `docs/` - safety notes and roadmap.
 
 Generated scratch outputs should stay outside the repository or in ignored output
-folders. Only intentional sample files belong in `examples/`.
+folders.
 
 ## Generic NC Warning
 
