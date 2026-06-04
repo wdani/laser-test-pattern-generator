@@ -1,0 +1,18 @@
+{
+  "rows": "8",
+  "cols": "8",
+  "speed_min": "1800",
+  "speed_max": "2800",
+  "power_min": "20",
+  "power_max": "40",
+  "tile_size": "8.0",
+  "gap": "2.0",
+  "grid_x": "18.0",
+  "grid_y": "8.0",
+  "mode": "Fill",
+  "line_interval": "0.10",
+  "labels_enabled": true,
+  "language": "English",
+  "output_format": "Both",
+  "nc_s_max": "1000"
+}

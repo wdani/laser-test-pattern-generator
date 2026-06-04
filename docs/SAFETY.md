@@ -1,6 +1,7 @@
-# Safety notes
+# Safety Notes
 
-This project generates laser test patterns. Always verify generated files before running a laser.
+This project generates laser test patterns. Always verify generated files before
+running a laser.
 
 ## For Makera Studio `.mks`
 
@@ -11,7 +12,8 @@ This project generates laser test patterns. Always verify generated files before
 
 ## For generic `.nc`
 
-Different controllers use different laser power scales:
+Generic NC/G-code is controller-dependent. Different controllers use different
+laser power scales:
 
 - `S1`
 - `S255`
@@ -20,4 +22,10 @@ Different controllers use different laser power scales:
 
 Set **NC S max** correctly and always preview the file in your sender/CAM before use.
 
-Never leave a laser unattended.
+## General Laser Safety
+
+- Start with conservative power and speed settings for unknown materials.
+- Use proper ventilation and fire-safe fixturing.
+- Never leave a laser unattended.
+- Keep an appropriate fire extinguisher nearby.
+- Follow the safety manual for your machine, material, and controller.

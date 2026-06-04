@@ -1,56 +1,59 @@
 # Laser Test Pattern Generator
 
-Generate laser material test patterns for **Makera Studio (`.mks`)** and **generic NC/G-code (`.nc`)**.
+Generate laser material test patterns for **Makera Studio (`.mks`)** and
+**generic NC/G-code (`.nc`)**.
 
-> Unofficial tool. Not affiliated with Makera. Always preview generated files before running a laser.
+> Unofficial tool. Not affiliated with Makera. Always preview generated files
+> before running a laser.
+
+## Current Release
+
+The first clean public release baseline is **v1.0**.
+
+This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
+Windows convenience launcher; the generator itself runs from Python on Windows,
+Linux, and macOS.
 
 ## Features
 
 - Generate Makera Studio `.mks` project files.
 - Generate generic `.nc` / G-code files.
 - Output modes: `MKS`, `NC`, or `Both`.
-- Configurable grid: rows, columns, tile size, gap and stock size.
+- Configurable grid: rows, columns, tile size, gap, and stock size.
 - Configurable test ranges: speed in mm/min and power in percent.
-- Laser modes: Line, Fill and Offset Fill.
-- Labels in English or German.
-- Preset manager.
-- Auto filename generation.
-- Overwrite protection.
+- Laser modes: Line, Fill, and Offset Fill.
+- English GUI.
+- Generated labels selectable between English and German.
+- Preset manager with JSON presets.
+- Auto filename generation and overwrite protection.
 - Approximate preview tab.
 
-## Current release
-
-The current first packaged version is **v1.0**.
-
-The release ZIP contains:
-
-- `makera_material_test_generator.py`
-- `start_gui_windows.bat`
-- `generate_example_cli_windows.bat`
-- `templates/`
-- `presets/`
-- `examples/`
-- documentation and license files
-
-## Quick start
+## Quick Start
 
 ### Windows
 
-1. Download the v1.0 release ZIP.
-2. Extract it.
-3. Double-click:
+Double-click:
 
 ```text
 start_gui_windows.bat
 ```
 
-### Manual start
+### Linux/macOS
+
+```bash
+python3 makera_material_test_generator.py --gui
+```
+
+### Manual Python Start
 
 ```bash
 python makera_material_test_generator.py --gui
 ```
 
-## Recommended first test
+Tkinter is part of the Python standard library on many installs. On some Linux
+distributions it is packaged separately as `python3-tk`.
+
+## Recommended First Test
 
 1. Start the GUI.
 2. Open the **Presets** tab.
@@ -61,7 +64,7 @@ python makera_material_test_generator.py --gui
 7. Press **Recalculate**.
 8. Check the Preview before exporting or running.
 
-## Command line example
+## Command Line Examples
 
 Generate both `.mks` and `.nc`:
 
@@ -81,9 +84,27 @@ Generate only generic `.nc`:
 python makera_material_test_generator.py --format NC --output material_test.nc --nc-s-max 1000
 ```
 
-## Generic NC warning
+Generate German labels:
 
-Generic `.nc` output is controller-dependent. Different controllers use different laser power scales, for example:
+```bash
+python makera_material_test_generator.py --format MKS --language Deutsch --output material_test_de.mks
+```
+
+## Repository Layout
+
+- `makera_material_test_generator.py` - main Python/Tkinter app and CLI.
+- `start_gui_windows.bat` - Windows convenience launcher.
+- `templates/` - Makera Studio template projects used by `.mks` generation.
+- `presets/` - compatible JSON presets for the GUI.
+- `docs/` - safety notes and roadmap.
+
+Generated scratch outputs should stay outside the repository or in ignored output
+folders.
+
+## Generic NC Warning
+
+Generic `.nc` output is controller-dependent. Different controllers use
+different laser power scales, for example:
 
 ```text
 S1
