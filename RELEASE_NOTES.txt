@@ -1,0 +1,36 @@
+Laser Test Pattern Generator v1.0
+================================
+
+This is the first clean public release baseline.
+
+Highlights
+----------
+
+- Cross-platform Python/Tkinter GUI and command-line generator.
+- Makera Studio .mks generation.
+- Generic .nc / G-code generation.
+- Output modes for MKS, NC, or both.
+- English GUI.
+- Generated labels selectable between English and German.
+- Included Makera templates, JSON presets, and curated examples.
+- Windows convenience launcher: start_gui_windows.bat.
+
+Linux/macOS Start
+-----------------
+
+python3 makera_material_test_generator.py --gui
+
+Windows Start
+-------------
+
+Double-click start_gui_windows.bat, or run:
+
+python makera_material_test_generator.py --gui
+
+Notes
+-----
+
+- No Windows .exe is included in v1.0.
+- No third-party Python packages are required.
+- Always preview generated .mks files in Makera Studio after Recalculate.
+- Always verify generic .nc files against your controller's S-value scale.
