@@ -1,0 +1,67 @@
+name: Build Release ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-zip:
+    name: Build release ZIP
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set release variables
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="manual-${GITHUB_RUN_NUMBER}"
+          fi
+          SAFE_VERSION="${VERSION//./_}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "SAFE_VERSION=${SAFE_VERSION}" >> "$GITHUB_ENV"
+          echo "PACKAGE_DIR=Laser_Test_Pattern_Generator_${SAFE_VERSION}" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=Laser_Test_Pattern_Generator_${SAFE_VERSION}.zip" >> "$GITHUB_ENV"
+
+      - name: Build clean package folder
+        shell: bash
+        run: |
+          rm -rf dist
+          mkdir -p "dist/${PACKAGE_DIR}"
+
+          rsync -av ./ "dist/${PACKAGE_DIR}/" \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='dist/' \
+            --exclude='tmp/' \
+            --exclude='__pycache__/' \
+            --exclude='*.pyc' \
+            --exclude='*.pyo' \
+            --exclude='*.log'
+
+      - name: Create ZIP
+        shell: bash
+        run: |
+          cd dist
+          zip -r "${ZIP_NAME}" "${PACKAGE_DIR}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: dist/${{ env.ZIP_NAME }}
+
+      - name: Upload ZIP to GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ env.ZIP_NAME }}
