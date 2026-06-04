@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.1 - 2026-06-04
+
+Small generic NC power scale fix.
+
+### Changed
+
+- Changed the default generic NC profile to Makera-style `S0.0` to `S1.0`.
+- Added NC power profiles for Makera, GRBL, 8-bit, and Custom S-value scales.
+- Added a GUI `NC power profile` dropdown in the Laser / NC tab.
+- Added CLI option `--nc-power-profile`.
+- Kept `--nc-s-max` for the Custom/manual profile.
+- Updated included presets to store the Makera NC power profile explicitly.
+
+### Tests
+
+- Added checks for Makera `S0.2` / `S0.4` output.
+- Added checks for GRBL `S200` / `S400` output.
+
 ## v1.0 - 2026-06-04
 
 First clean public release baseline.

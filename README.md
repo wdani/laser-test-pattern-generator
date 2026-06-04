@@ -8,7 +8,7 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 ## Current Release
 
-The first clean public release baseline is **v1.0**.
+The current release is **v1.1**.
 
 This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
 Windows convenience launcher; the generator itself runs from Python on Windows,
@@ -22,6 +22,7 @@ Linux, and macOS.
 - Configurable grid: rows, columns, tile size, gap, and stock size.
 - Configurable test ranges: speed in mm/min and power in percent.
 - Laser modes: Line, Fill, and Offset Fill.
+- Generic NC power profiles for Makera, GRBL, 8-bit, and custom S-value scales.
 - English GUI.
 - Generated labels selectable between English and German.
 - Preset manager with JSON presets.
@@ -81,7 +82,13 @@ python makera_material_test_generator.py --format MKS --output material_test.mks
 Generate only generic `.nc`:
 
 ```bash
-python makera_material_test_generator.py --format NC --output material_test.nc --nc-s-max 1000
+python makera_material_test_generator.py --format NC --output material_test.nc
+```
+
+Generate generic `.nc` for a GRBL-style controller:
+
+```bash
+python makera_material_test_generator.py --format NC --nc-power-profile "GRBL (0-1000)" --output material_test_grbl.nc
 ```
 
 Generate German labels:
@@ -101,27 +108,32 @@ python makera_material_test_generator.py --format MKS --language Deutsch --outpu
 Generated scratch outputs should stay outside the repository or in ignored output
 folders.
 
-## Generic NC Warning
+## Generic NC Power Scale
 
 Generic `.nc` output is controller-dependent. Different controllers use
-different laser power scales, for example:
+different laser power scales.
 
-```text
-S1
-S255
-S1000
-S10000
-```
+The default v1.1 profile is **Makera (0-1)**:
 
-The tool default is:
+- `0%` power maps to `S0.0`
+- `20%` power maps to `S0.2`
+- `40%` power maps to `S0.4`
+- `100%` power maps to `S1.0`
 
-```text
-NC S max = 1000
-20% power = S200
-40% power = S400
-100% power = S1000
-```
+GRBL-style controllers often use **0-1000** instead:
 
+- `20%` power maps to `S200`
+- `40%` power maps to `S400`
+- `100%` power maps to `S1000`
+
+Available profiles:
+
+- `Makera (0-1)`
+- `GRBL (0-1000)`
+- `8-bit (0-255)`
+- `Custom`
+
+Use `--nc-power-profile Custom --nc-s-max VALUE` for another controller scale.
 Always verify the `S` scale for your machine.
 
 ## Safety

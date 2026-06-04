@@ -31,5 +31,6 @@
   "stock_z": "20",
   "round_speed_values": true,
   "round_power_values": true,
-  "nc_s_max": "1000"
+  "nc_power_profile": "Makera (0-1)",
+  "nc_s_max": "1"
 }
