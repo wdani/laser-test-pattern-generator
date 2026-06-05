@@ -25,8 +25,8 @@ Versioning is documented in [VERSIONING.md](VERSIONING.md).
 
 ## v2.0.0 / later
 
-- Refactor the single-file script into a package structure.
-- Cleaner internal architecture.
+- Continue refining the package structure.
+- Cleaner internal architecture where it reduces maintenance cost.
 - Possible plugin/module structure.
 
 ## Later ideas
