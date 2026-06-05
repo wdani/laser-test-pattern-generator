@@ -4,6 +4,22 @@ Windows executable builds are experimental. The primary supported way to run the
 Laser Test Pattern Generator is still the cross-platform Python/Tkinter source
 version.
 
+The `.exe` package and `.bat` launcher are Windows-only convenience options.
+macOS and Linux users should run from source with Python/Tkinter instead:
+
+```bash
+python3 run_gui.py
+```
+
+or:
+
+```bash
+python3 makera_material_test_generator.py --gui
+```
+
+Tkinter is required. On some Linux distributions it may need to be installed as
+`python3-tk` or the distribution's equivalent package.
+
 The executable package is built with PyInstaller through the manual GitHub
 Actions workflow `Build Windows Executable`. The workflow uses
 `workflow_dispatch` for manual test builds and also runs for version tags such

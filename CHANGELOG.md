@@ -18,6 +18,11 @@ UI/UX upgrade release.
 
 - Improved GUI spacing, grouping, and status/log messages.
 - Improved the Preview tab summary formatting and warning visibility.
+- Removed manual preview update buttons because the GUI preview now refreshes
+  automatically after generation, preset loads, tab changes, and key layout
+  edits.
+- Hidden the right-side quick preview while the detailed Preview tab is active
+  so the detailed preview can use the full width.
 - The GUI output path now updates known generated suffixes `.mks` and `.nc`
   when switching output format, while leaving custom suffixes unchanged.
 - Bumped visible version text to v1.5.0.
