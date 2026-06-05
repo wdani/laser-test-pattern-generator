@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 try:
     import tkinter as tk
@@ -13,10 +13,10 @@ except Exception:
     filedialog = None
     messagebox = None
 
-from .font import text_segments
 from .generator_mks import generate_mks
 from .generator_nc import fmt_num, generate_generic_nc, profile_for_nc_s_max
 from .geometry import computed_layout, linspace, validate_layout
+from .paths import expected_output_suffix_for_format, sync_output_suffix_for_format
 from .presets import (
     PRESET_METADATA_FIELDS,
     export_preset_file,
@@ -38,6 +38,55 @@ from .settings import (
 )
 
 
+class Tooltip:
+    def __init__(self, widget, text: str, delay_ms: int = 600) -> None:
+        self.widget = widget
+        self.text = text
+        self.delay_ms = delay_ms
+        self._after_id: Optional[str] = None
+        self._window = None
+        widget.bind("<Enter>", self._schedule, add="+")
+        widget.bind("<Leave>", self._hide, add="+")
+        widget.bind("<ButtonPress>", self._hide, add="+")
+
+    def _schedule(self, _event=None) -> None:
+        self._cancel()
+        self._after_id = self.widget.after(self.delay_ms, self._show)
+
+    def _cancel(self) -> None:
+        if self._after_id:
+            self.widget.after_cancel(self._after_id)
+            self._after_id = None
+
+    def _show(self) -> None:
+        self._after_id = None
+        if self._window or not self.text:
+            return
+
+        x = self.widget.winfo_rootx() + 20
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 8
+        self._window = tk.Toplevel(self.widget)
+        self._window.wm_overrideredirect(True)
+        self._window.wm_geometry(f"+{x}+{y}")
+        label = ttk.Label(
+            self._window,
+            text=self.text,
+            justify="left",
+            background="#ffffe6",
+            relief="solid",
+            borderwidth=1,
+            padding=(6, 4),
+            wraplength=320,
+        )
+        label.pack()
+
+    def _hide(self, _event=None) -> None:
+        self._cancel()
+        if self._window:
+            self._window.destroy()
+            self._window = None
+
+
 class GeneratorGui:
     def __init__(self) -> None:
         if tk is None:
@@ -45,21 +94,50 @@ class GeneratorGui:
 
         self.root = tk.Tk()
         self.root.title(f"Makera Material Test Generator {APP_VERSION}")
-        self.root.geometry("900x720")
+        self.root.geometry("1180x760")
+        self.root.minsize(860, 640)
         self.vars: Dict[str, tk.Variable] = {}
         self.preset_names_var = tk.StringVar(value="")
+        self._preview_after_id: Optional[str] = None
+        self._side_preview_visible = True
         self._build()
         self._refresh_presets()
+        self._bind_auto_preview_updates()
+        self._schedule_preview_refresh()
 
     def _var(self, name: str, default, cls=tk.StringVar):
         v = cls(value=default)
         self.vars[name] = v
         return v
 
-    def _entry(self, parent, label: str, varname: str, default, row: int, col: int = 0, width: int = 12):
-        ttk.Label(parent, text=label).grid(row=row, column=col, sticky="w", padx=6, pady=4)
+    def _tooltip(self, widget, text: str):
+        if text:
+            Tooltip(widget, text)
+        return widget
+
+    def _hint(self, parent, text: str, row: int, column: int = 0, columnspan: int = 4):
+        label = ttk.Label(parent, text=text, foreground="#555", wraplength=760)
+        label.grid(row=row, column=column, columnspan=columnspan, sticky="w", padx=6, pady=(2, 10))
+        return label
+
+    def _entry(
+        self,
+        parent,
+        label: str,
+        varname: str,
+        default,
+        row: int,
+        col: int = 0,
+        width: int = 12,
+        tooltip: str = "",
+    ):
+        lbl = ttk.Label(parent, text=label)
+        lbl.grid(row=row, column=col, sticky="w", padx=6, pady=4)
         ent = ttk.Entry(parent, textvariable=self._var(varname, default), width=width)
-        ent.grid(row=row, column=col+1, sticky="w", padx=6, pady=4)
+        ent.grid(row=row, column=col + 1, sticky="w", padx=6, pady=4)
+        if tooltip:
+            self._tooltip(lbl, tooltip)
+            self._tooltip(ent, tooltip)
         return ent
 
     def _build(self):
@@ -70,12 +148,17 @@ class GeneratorGui:
         output.pack(fill="x", pady=(0, 8))
 
         self._var("output", str(Path.cwd() / "makera_material_test_generated.mks"))
-        ttk.Entry(output, textvariable=self.vars["output"], width=78).grid(row=0, column=0, columnspan=5, padx=6, pady=6, sticky="we")
-        ttk.Button(output, text="Browse", command=self._browse_output).grid(row=0, column=5, padx=6, pady=6)
+        output_entry = ttk.Entry(output, textvariable=self.vars["output"], width=78)
+        output_entry.grid(row=0, column=0, columnspan=5, padx=6, pady=6, sticky="we")
+        self._tooltip(output_entry, "Known generated suffixes .mks and .nc follow the selected format.")
+        ttk.Button(output, text="Browse...", command=self._browse_output).grid(row=0, column=5, padx=6, pady=6)
 
-        self.vars["output_format"] = tk.StringVar(value="MKS")
+        self._var("output_format", "MKS")
         ttk.Label(output, text="Format").grid(row=1, column=0, sticky="w", padx=6, pady=3)
-        ttk.Combobox(output, textvariable=self.vars["output_format"], values=["MKS", "NC", "Both"], state="readonly", width=10).grid(row=1, column=1, sticky="w", padx=6, pady=3)
+        format_combo = ttk.Combobox(output, textvariable=self.vars["output_format"], values=["MKS", "NC", "Both"], state="readonly", width=10)
+        format_combo.grid(row=1, column=1, sticky="w", padx=6, pady=3)
+        format_combo.bind("<<ComboboxSelected>>", self._on_output_format_changed)
+        self._tooltip(format_combo, "MKS is a Makera Studio project. NC is generic G-code. Both creates both files.")
 
         self.vars["overwrite_existing"] = tk.BooleanVar(value=False)
         ttk.Checkbutton(output, text="Overwrite existing file", variable=self.vars["overwrite_existing"]).grid(row=1, column=2, sticky="w", padx=6, pady=3)
@@ -84,9 +167,32 @@ class GeneratorGui:
         ttk.Checkbutton(output, text="Auto filename", variable=self.vars["auto_filename"]).grid(row=1, column=3, sticky="w", padx=6, pady=3)
         ttk.Label(output, text="Material").grid(row=1, column=4, sticky="e", padx=6, pady=3)
         ttk.Entry(output, textvariable=self._var("material_name", "material"), width=16).grid(row=1, column=5, sticky="w", padx=6, pady=3)
+        ttk.Label(
+            output,
+            text="MKS = Makera Studio project. NC = generic G-code / NC. Both keeps .mks as the visible base path.",
+            foreground="#555",
+        ).grid(row=2, column=0, columnspan=6, sticky="w", padx=6, pady=(0, 6))
         output.columnconfigure(0, weight=1)
 
-        tabs = ttk.Notebook(main)
+        safety = ttk.Label(
+            main,
+            text="Safety / verify: presets are starting points. Always preview generated files before running the laser.",
+            foreground="#7a4a00",
+            wraplength=1100,
+        )
+        safety.pack(fill="x", pady=(0, 8))
+
+        work = ttk.Frame(main)
+        work.pack(fill="both", expand=True)
+        work.rowconfigure(0, weight=1)
+        work.columnconfigure(0, weight=3, minsize=620)
+        work.columnconfigure(1, weight=1, minsize=290)
+        self.work_area = work
+
+        left = ttk.Frame(work)
+        left.grid(row=0, column=0, sticky="nsew")
+
+        tabs = ttk.Notebook(left)
         tabs.pack(fill="both", expand=True)
 
         self.tab_grid = ttk.Frame(tabs, padding=10)
@@ -110,204 +216,181 @@ class GeneratorGui:
         self._build_preview_tab()
         self._build_presets_tab()
 
-        buttons = ttk.Frame(main)
+        buttons = ttk.Frame(left)
         buttons.pack(fill="x", pady=8)
         ttk.Button(buttons, text="Generate", command=self._generate).pack(side="left", padx=6)
+        ttk.Button(buttons, text="Update Preview", command=self._update_preview).pack(side="left", padx=6)
         ttk.Button(buttons, text="Close", command=self.root.destroy).pack(side="left", padx=6)
+        ttk.Label(buttons, text="Flow: choose output, set grid and laser values, preview, generate, verify.", foreground="#555").pack(side="left", padx=12)
 
-        self.status = tk.Text(main, height=9)
+        self.status = tk.Text(left, height=8, wrap="word")
         self.status.pack(fill="both", expand=False)
-        self._log("Ready. Generate files, then verify them in Makera Studio or your NC viewer/sender.")
+        self.status.tag_configure("warning", foreground="#9a3412")
+        self.status.tag_configure("error", foreground="#b91c1c")
+        self.status.tag_configure("success", foreground="#166534")
+        self._log("Ready. Choose output, preview the layout, generate files, then verify them before running.")
+
+        self._build_side_preview(work)
+        self.root.bind("<Configure>", self._update_side_preview_visibility, add="+")
 
     def _build_grid_tab(self):
         f = self.tab_grid
-        self._entry(f, "Rows", "rows", "6", 0, 0)
-        self._entry(f, "Columns", "cols", "6", 0, 2)
-        self._entry(f, "Tile size (mm)", "tile_size", "8.0", 1, 0)
-        self._entry(f, "Gap (mm)", "gap", "2.0", 1, 2)
+        f.columnconfigure(0, weight=1)
 
+        grid = ttk.LabelFrame(f, text="Test grid")
+        grid.grid(row=0, column=0, sticky="we", padx=2, pady=(0, 10))
+        self._entry(grid, "Rows", "rows", "6", 0, 0, tooltip="Rows vary the speed range from bottom to top.")
+        self._entry(grid, "Columns", "cols", "6", 0, 2, tooltip="Columns vary the power range from left to right.")
+        self._entry(grid, "Tile size (mm)", "tile_size", "8.0", 1, 0)
+        self._entry(grid, "Gap (mm)", "gap", "2.0", 1, 2)
+        self._hint(grid, "Rows and columns define the experiment grid. Tile size and gap only affect layout.", 2)
+        grid.columnconfigure(1, weight=1)
+        grid.columnconfigure(3, weight=1)
+
+        position = ttk.LabelFrame(f, text="Grid position")
+        position.grid(row=1, column=0, sticky="we", padx=2, pady=(0, 10))
         self.vars["auto_position"] = tk.BooleanVar(value=True)
-        ttk.Checkbutton(f, text="Auto position inside stock", variable=self.vars["auto_position"]).grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=4)
-        self._entry(f, "Grid X manual", "grid_x", "18.0", 3, 0)
-        self._entry(f, "Grid Y manual", "grid_y", "8.0", 3, 2)
+        auto = ttk.Checkbutton(position, text="Auto position inside stock", variable=self.vars["auto_position"])
+        auto.grid(row=0, column=0, columnspan=2, sticky="w", padx=6, pady=4)
+        self._tooltip(auto, "When enabled, the grid is placed inside the stock with room for labels.")
+        self._entry(position, "Grid X manual", "grid_x", "18.0", 1, 0, tooltip="Used only when Auto position is disabled.")
+        self._entry(position, "Grid Y manual", "grid_y", "8.0", 1, 2, tooltip="Used only when Auto position is disabled.")
+        self._hint(position, "Manual Grid X/Y are used only when Auto position is disabled.", 2)
 
-        sep = ttk.Separator(f, orient="horizontal")
-        sep.grid(row=4, column=0, columnspan=4, sticky="we", pady=12)
-
-        self._entry(f, "Stock X (mm)", "stock_x", "100", 5, 0)
-        self._entry(f, "Stock Y (mm)", "stock_y", "100", 5, 2)
-        self._entry(f, "Stock Z (mm)", "stock_z", "20", 6, 0)
-
-        note = ttk.Label(f, text="Auto position keeps room for labels and centers the whole test layout inside the stock.", foreground="#555")
-        note.grid(row=7, column=0, columnspan=4, sticky="w", padx=6, pady=10)
+        stock = ttk.LabelFrame(f, text="Stock")
+        stock.grid(row=2, column=0, sticky="we", padx=2, pady=(0, 10))
+        self._entry(stock, "Stock X (mm)", "stock_x", "100", 0, 0)
+        self._entry(stock, "Stock Y (mm)", "stock_y", "100", 0, 2)
+        self._entry(stock, "Stock Z (mm)", "stock_z", "20", 1, 0)
+        self._hint(stock, "Stock dimensions are used for layout checks and Makera project stock metadata.", 2)
 
     def _build_params_tab(self):
         f = self.tab_params
-        self._entry(f, "Speed min (mm/min)", "speed_min", "2200", 0, 0)
-        self._entry(f, "Speed max (mm/min)", "speed_max", "2800", 0, 2)
-        self._entry(f, "Power min (%)", "power_min", "20", 1, 0)
-        self._entry(f, "Power max (%)", "power_max", "40", 1, 2)
+        f.columnconfigure(0, weight=1)
 
+        ranges = ttk.LabelFrame(f, text="Speed and power ranges")
+        ranges.grid(row=0, column=0, sticky="we", padx=2, pady=(0, 10))
+        self._entry(ranges, "Speed min (mm/min)", "speed_min", "2200", 0, 0, tooltip="Lowest generated tile speed.")
+        self._entry(ranges, "Speed max (mm/min)", "speed_max", "2800", 0, 2, tooltip="Highest generated tile speed.")
+        self._entry(ranges, "Power min (%)", "power_min", "20", 1, 0, tooltip="Lowest generated tile power.")
+        self._entry(ranges, "Power max (%)", "power_max", "40", 1, 2, tooltip="Highest generated tile power.")
+        self._hint(ranges, "Speed is interpolated across rows. Power is interpolated across columns.", 2)
+
+        rounding = ttk.LabelFrame(f, text="Rounding")
+        rounding.grid(row=1, column=0, sticky="we", padx=2, pady=(0, 10))
         self.vars["round_speed_values"] = tk.BooleanVar(value=True)
         self.vars["round_power_values"] = tk.BooleanVar(value=True)
-        ttk.Checkbutton(f, text="Round speed labels/values to integers", variable=self.vars["round_speed_values"]).grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=4)
-        ttk.Checkbutton(f, text="Round power labels/values to integers", variable=self.vars["round_power_values"]).grid(row=2, column=2, columnspan=2, sticky="w", padx=6, pady=4)
-
-        note = ttk.Label(f, text="Tip: integer rounding avoids long labels like 1942.857.", foreground="#555")
-        note.grid(row=3, column=0, columnspan=4, sticky="w", padx=6, pady=10)
+        speed_round = ttk.Checkbutton(rounding, text="Round speed values and labels to integers", variable=self.vars["round_speed_values"])
+        speed_round.grid(row=0, column=0, columnspan=2, sticky="w", padx=6, pady=4)
+        power_round = ttk.Checkbutton(rounding, text="Round power values and labels to integers", variable=self.vars["round_power_values"])
+        power_round.grid(row=0, column=2, columnspan=2, sticky="w", padx=6, pady=4)
+        self._tooltip(speed_round, "Rounding affects generated tile values, labels, and NC metadata.")
+        self._tooltip(power_round, "Rounding affects generated tile values, labels, and NC metadata.")
+        self._hint(rounding, "Tip: integer rounding avoids long labels like 1942.857 and documents the generated values more clearly.", 1)
 
     def _build_laser_tab(self):
         f = self.tab_laser
-        ttk.Label(f, text="Tile mode").grid(row=0, column=0, sticky="w", padx=6, pady=4)
+        f.columnconfigure(0, weight=1)
+
+        tile = ttk.LabelFrame(f, text="Tile laser pattern")
+        tile.grid(row=0, column=0, sticky="we", padx=2, pady=(0, 10))
+        ttk.Label(tile, text="Tile mode").grid(row=0, column=0, sticky="w", padx=6, pady=4)
         self.vars["mode"] = tk.StringVar(value="Offset Fill")
-        ttk.Combobox(f, textvariable=self.vars["mode"], values=list(LASER_MODES), state="readonly", width=18).grid(row=0, column=1, sticky="w", padx=6, pady=4)
-
-        self._entry(f, "Line interval (mm)", "line_interval", "0.10", 0, 2)
-        self._entry(f, "Passes", "passes", "1", 1, 0)
-        self._entry(f, "Scan angle", "scan_angle", "0", 1, 2)
-
+        mode_combo = ttk.Combobox(tile, textvariable=self.vars["mode"], values=list(LASER_MODES), state="readonly", width=18)
+        mode_combo.grid(row=0, column=1, sticky="w", padx=6, pady=4)
+        self._tooltip(mode_combo, "Line outlines tiles. Fill scans lines. Offset Fill creates inward contours.")
+        self._entry(tile, "Line interval (mm)", "line_interval", "0.10", 0, 2, tooltip="Spacing between fill lines or offset contours.")
+        self._entry(tile, "Passes", "passes", "1", 1, 0, tooltip="Repeat each tile pattern this many times.")
+        self._entry(tile, "Scan angle", "scan_angle", "0", 1, 2, tooltip="Fill-line angle in degrees for Fill mode.")
         self.vars["bidirectional"] = tk.BooleanVar(value=True)
-        ttk.Checkbutton(f, text="Bi-directional Fill", variable=self.vars["bidirectional"]).grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=4)
+        bidirectional = ttk.Checkbutton(tile, text="Bi-directional Fill", variable=self.vars["bidirectional"])
+        bidirectional.grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=4)
+        self._tooltip(bidirectional, "Fill mode alternates scan direction between lines.")
+        self._hint(tile, "Mode hints: Line = outline, Fill = scan lines, Offset Fill = contour-like fill.", 3)
 
-        sep = ttk.Separator(f, orient="horizontal")
-        sep.grid(row=3, column=0, columnspan=4, sticky="we", pady=12)
-
-        ttk.Label(f, text="NC power profile").grid(row=4, column=0, sticky="w", padx=6, pady=4)
+        nc = ttk.LabelFrame(f, text="Generic NC power scale")
+        nc.grid(row=1, column=0, sticky="we", padx=2, pady=(0, 10))
+        ttk.Label(nc, text="NC power profile").grid(row=0, column=0, sticky="w", padx=6, pady=4)
         self.vars["nc_power_profile"] = tk.StringVar(value=DEFAULT_NC_POWER_PROFILE)
-        profile_combo = ttk.Combobox(f, textvariable=self.vars["nc_power_profile"], values=list(NC_POWER_PROFILES), state="readonly", width=18)
-        profile_combo.grid(row=4, column=1, sticky="w", padx=6, pady=4)
+        profile_combo = ttk.Combobox(nc, textvariable=self.vars["nc_power_profile"], values=list(NC_POWER_PROFILES), state="readonly", width=18)
+        profile_combo.grid(row=0, column=1, sticky="w", padx=6, pady=4)
         profile_combo.bind("<<ComboboxSelected>>", lambda _event: self._sync_nc_s_max_from_profile())
-
-        self._entry(f, "NC S max", "nc_s_max", "1", 5, 0)
-        note = ttk.Label(f, text="Generic NC only: Makera uses S0.0-S1.0; GRBL often uses S0-S1000; 8-bit uses S0-S255.", foreground="#555")
-        note.grid(row=6, column=0, columnspan=4, sticky="w", padx=6, pady=10)
+        self._tooltip(profile_combo, "Select the S-value scale your NC controller expects.")
+        self._entry(nc, "NC S max", "nc_s_max", "1", 1, 0, tooltip="Maximum laser S value for generic NC output. Custom keeps manual input.")
+        self._hint(nc, "Generic NC only: Makera uses S0.0-S1.0; GRBL often uses S0-S1000; 8-bit uses S0-S255.", 2)
 
     def _build_labels_tab(self):
         f = self.tab_labels
+        f.columnconfigure(0, weight=1)
+        labels = ttk.LabelFrame(f, text="Generated labels")
+        labels.grid(row=0, column=0, sticky="we", padx=2, pady=(0, 10))
         self.vars["labels_enabled"] = tk.BooleanVar(value=True)
-        ttk.Checkbutton(f, text="Enable labels", variable=self.vars["labels_enabled"]).grid(row=0, column=0, columnspan=2, sticky="w", padx=6, pady=4)
-
-        ttk.Label(f, text="Language").grid(row=0, column=2, sticky="w", padx=6, pady=4)
+        enabled = ttk.Checkbutton(labels, text="Enable labels", variable=self.vars["labels_enabled"])
+        enabled.grid(row=0, column=0, columnspan=2, sticky="w", padx=6, pady=4)
+        self._tooltip(enabled, "Labels are generated as simple stroke geometry.")
+        ttk.Label(labels, text="Language").grid(row=0, column=2, sticky="w", padx=6, pady=4)
         self.vars["language"] = tk.StringVar(value="English")
-        ttk.Combobox(f, textvariable=self.vars["language"], values=["English", "Deutsch"], state="readonly", width=12).grid(row=0, column=3, sticky="w", padx=6, pady=4)
-
-        self._entry(f, "Label speed", "label_speed", "2500", 1, 0)
-        self._entry(f, "Label power (%)", "label_power", "25", 1, 2)
-
-        ttk.Label(f, text="Label mode").grid(row=2, column=0, sticky="w", padx=6, pady=4)
+        ttk.Combobox(labels, textvariable=self.vars["language"], values=["English", "Deutsch"], state="readonly", width=12).grid(row=0, column=3, sticky="w", padx=6, pady=4)
+        self._entry(labels, "Label speed", "label_speed", "2500", 1, 0, tooltip="Feed rate used for label strokes.")
+        self._entry(labels, "Label power (%)", "label_power", "25", 1, 2, tooltip="Laser power used for label strokes.")
+        ttk.Label(labels, text="Label mode").grid(row=2, column=0, sticky="w", padx=6, pady=4)
         self.vars["label_mode"] = tk.StringVar(value="Line")
-        ttk.Combobox(f, textvariable=self.vars["label_mode"], values=list(LASER_MODES), state="readonly", width=18).grid(row=2, column=1, sticky="w", padx=6, pady=4)
-        self._entry(f, "Label thickness", "label_thickness", "0.06", 2, 2)
-
+        label_mode = ttk.Combobox(labels, textvariable=self.vars["label_mode"], values=list(LASER_MODES), state="readonly", width=18)
+        label_mode.grid(row=2, column=1, sticky="w", padx=6, pady=4)
+        self._tooltip(label_mode, "Label strokes can use the same mode names as tile geometry.")
+        self._entry(labels, "Label thickness", "label_thickness", "0.06", 2, 2, tooltip="Approximate stroke width for label geometry.")
+        self._hint(labels, "Labels are simple built-in stroke text. Geometry behavior is unchanged.", 3)
 
     def _build_preview_tab(self):
         f = self.tab_preview
-
         top = ttk.Frame(f)
         top.pack(fill="x", pady=(0, 8))
         ttk.Button(top, text="Update Preview", command=self._update_preview).pack(side="left", padx=6)
-        ttk.Label(top, text="Approximate 2D layout preview. The real laser paths are calculated by Makera Studio / your controller.", foreground="#555").pack(side="left", padx=12)
+        ttk.Label(
+            top,
+            text="Approximate 2D layout preview. Real paths are calculated by Makera Studio / your controller.",
+            foreground="#555",
+            wraplength=680,
+        ).pack(side="left", padx=12)
 
         body = ttk.Frame(f)
         body.pack(fill="both", expand=True)
-
         self.preview_canvas = tk.Canvas(body, width=560, height=460, bg="white", highlightthickness=1, highlightbackground="#aaa")
         self.preview_canvas.pack(side="left", fill="both", expand=True, padx=(0, 10))
-
-        self.preview_text = tk.Text(body, width=36, height=22)
+        self.preview_canvas.bind("<Configure>", lambda _event: self._schedule_preview_refresh())
+        self.preview_text = tk.Text(body, width=38, height=22, wrap="word")
         self.preview_text.pack(side="right", fill="y")
+        self.preview_text.tag_configure("heading", font=("TkDefaultFont", 10, "bold"))
+        self.preview_text.tag_configure("warning", foreground="#9a3412")
+        self.preview_text.tag_configure("ok", foreground="#166534")
 
-    def _update_preview(self):
-        try:
-            import copy as _copy
-            settings = self._settings()
-            layout_settings = _copy.deepcopy(settings)
-            layout = computed_layout(layout_settings)
-            warnings = validate_layout(settings)
-
-            c = self.preview_canvas
-            c.delete("all")
-            cw = int(c.winfo_width() or 560)
-            ch = int(c.winfo_height() or 460)
-            pad = 30
-
-            sx = layout["stock_x"]
-            sy = layout["stock_y"]
-            scale = min((cw - 2 * pad) / max(sx, 1), (ch - 2 * pad) / max(sy, 1))
-
-            def px(x):
-                return pad + x * scale
-
-            def py(y):
-                # Display Y upwards
-                return ch - pad - y * scale
-
-            # Stock outline
-            c.create_rectangle(px(0), py(sy), px(sx), py(0), outline="#222", width=2)
-            c.create_text(px(sx/2), py(sy) - 12, text=f"Stock {sx:g} × {sy:g} mm", fill="#222")
-
-            gx = layout["grid_x"]
-            gy = layout["grid_y"]
-            tile = settings.tile_size
-            gap = settings.gap
-            rows = int(settings.rows)
-            cols = int(settings.cols)
-
-            # Approx label zones
-            if settings.labels_enabled:
-                c.create_text(px(gx + layout["grid_w"]/2), py(gy + layout["grid_h"] + 9.5), text="POWER (%)", fill="#555")
-                c.create_text(px(max(2.5, gx - 16.5)), py(gy + layout["grid_h"]/2), text="SPEED", fill="#555", angle=90)
-
-            # Tiles
-            for r in range(rows):
-                for col in range(cols):
-                    x = gx + col * (tile + gap)
-                    y = gy + r * (tile + gap)
-                    c.create_rectangle(px(x), py(y + tile), px(x + tile), py(y), outline="#1f77b4", width=1)
-
-            # Overall approx layout bounds
-            c.create_rectangle(px(layout["layout_min_x"]), py(layout["layout_max_y"]), px(layout["layout_max_x"]), py(layout["layout_min_y"]), outline="#cc7a00", dash=(4, 2))
-
-            # Value summary
-            speeds_raw = linspace(settings.speed_min, settings.speed_max, rows)
-            powers_raw = linspace(settings.power_min, settings.power_max, cols)
-            speeds = [int(round(v)) for v in speeds_raw] if settings.round_speed_values else [round(v, 6) for v in speeds_raw]
-            powers = [int(round(v)) for v in powers_raw] if settings.round_power_values else [round(v, 6) for v in powers_raw]
-
-            self.preview_text.delete("1.0", "end")
-            self.preview_text.insert("end", "Layout summary\n")
-            self.preview_text.insert("end", "--------------\n")
-            self.preview_text.insert("end", f"Grid: {rows} × {cols}\n")
-            self.preview_text.insert("end", f"Tiles: {rows * cols}\n")
-            self.preview_text.insert("end", f"Grid size: {layout['grid_w']:.1f} × {layout['grid_h']:.1f} mm\n")
-            self.preview_text.insert("end", f"Grid origin: X{layout['grid_x']:.1f} Y{layout['grid_y']:.1f}\n")
-            self.preview_text.insert("end", f"Approx bounds: X{layout['layout_min_x']:.1f}..{layout['layout_max_x']:.1f}, Y{layout['layout_min_y']:.1f}..{layout['layout_max_y']:.1f}\n\n")
-            self.preview_text.insert("end", "Speed top → bottom:\n")
-            self.preview_text.insert("end", ", ".join(str(v) for v in reversed(speeds)) + "\n\n")
-            self.preview_text.insert("end", "Power left → right:\n")
-            self.preview_text.insert("end", ", ".join(str(v) for v in powers) + "\n\n")
-
-            if warnings:
-                self.preview_text.insert("end", "Warnings:\n")
-                for w in warnings:
-                    self.preview_text.insert("end", "- " + w + "\n")
-            else:
-                self.preview_text.insert("end", "No layout warnings.\n")
-
-            self._log("Preview updated.")
-        except Exception as e:
-            self._log("ERROR: " + str(e))
-            messagebox.showerror("Error", str(e))
-
-
+    def _build_side_preview(self, parent):
+        frame = ttk.LabelFrame(parent, text="Quick Preview")
+        frame.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+        frame.rowconfigure(1, weight=1)
+        frame.columnconfigure(0, weight=1)
+        self.side_preview_frame = frame
+        ttk.Label(
+            frame,
+            text="Live approximate layout. Use the Preview tab for details.",
+            foreground="#555",
+            wraplength=280,
+        ).grid(row=0, column=0, sticky="we", padx=8, pady=(8, 4))
+        self.side_preview_canvas = tk.Canvas(frame, width=300, height=360, bg="white", highlightthickness=1, highlightbackground="#aaa")
+        self.side_preview_canvas.grid(row=1, column=0, sticky="nsew", padx=8, pady=4)
+        self.side_preview_canvas.bind("<Configure>", lambda _event: self._schedule_preview_refresh())
+        self.side_preview_note = tk.StringVar(value="Preview updates as layout values change.")
+        ttk.Label(frame, textvariable=self.side_preview_note, foreground="#555", wraplength=280).grid(row=2, column=0, sticky="we", padx=8, pady=4)
+        ttk.Button(frame, text="Update Preview", command=self._update_preview).grid(row=3, column=0, sticky="w", padx=8, pady=(4, 8))
 
     def _build_presets_tab(self):
         f = self.tab_presets
-
+        f.columnconfigure(1, weight=1)
         ttk.Label(f, text="Preset").grid(row=0, column=0, sticky="w", padx=6, pady=4)
         self.vars["preset_name"] = tk.StringVar(value="")
         self.preset_combo = ttk.Combobox(f, textvariable=self.vars["preset_name"], values=[], width=42)
         self.preset_combo.grid(row=0, column=1, columnspan=4, sticky="we", padx=6, pady=4)
+        self._tooltip(self.preset_combo, "This top field is the only editable preset name. Type a new name, then click Save preset.")
 
         ttk.Button(f, text="Load preset", command=self._load_selected_preset).grid(row=1, column=0, padx=6, pady=6, sticky="w")
         ttk.Button(f, text="Save preset", command=self._save_named_preset).grid(row=1, column=1, padx=6, pady=6, sticky="w")
@@ -316,7 +399,6 @@ class GeneratorGui:
 
         sep = ttk.Separator(f, orient="horizontal")
         sep.grid(row=2, column=0, columnspan=5, sticky="we", pady=12)
-
         ttk.Button(f, text="Import preset...", command=self._load_preset_file).grid(row=3, column=0, padx=6, pady=6, sticky="w")
         ttk.Button(f, text="Export preset...", command=self._save_preset_file).grid(row=3, column=1, padx=6, pady=6, sticky="w")
 
@@ -338,21 +420,54 @@ class GeneratorGui:
         ttk.Button(meta, text="Browse...", command=self._browse_reference_image).grid(row=ref_row, column=3, sticky="w", padx=6, pady=3)
         ttk.Button(meta, text="Clear", command=self._clear_reference_image).grid(row=ref_row, column=4, sticky="w", padx=6, pady=3)
         meta.columnconfigure(1, weight=1)
+        self._hint(f, "Typing a new preset name and clicking Save preset creates a new preset. Existing files ask before overwrite.", 5, column=0, columnspan=5)
 
-        note = ttk.Label(f, text="Presets are starting points. Verify values and material safety on your own machine.", foreground="#555")
-        note.grid(row=5, column=0, columnspan=5, sticky="w", padx=6, pady=10)
-        f.columnconfigure(1, weight=1)
+    def _update_side_preview_visibility(self, _event=None):
+        if not hasattr(self, "side_preview_frame") or not hasattr(self, "work_area"):
+            return
+        should_show = self.root.winfo_width() >= 1060
+        if should_show == self._side_preview_visible:
+            return
+        self._side_preview_visible = should_show
+        if should_show:
+            self.work_area.columnconfigure(1, weight=1, minsize=290)
+            self.side_preview_frame.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+            self._schedule_preview_refresh()
+        else:
+            self.side_preview_frame.grid_remove()
+            self.work_area.columnconfigure(1, weight=0, minsize=0)
 
     def _browse_output(self):
+        suffix = expected_output_suffix_for_format(self.vars["output_format"].get())
         path = filedialog.asksaveasfilename(
-            defaultextension=".mks",
+            defaultextension=suffix,
             filetypes=[("Makera Studio Project", "*.mks"), ("NC/G-code", "*.nc"), ("All files", "*.*")]
         )
         if path:
             self.vars["output"].set(path)
 
+    def _sync_output_extension_with_format(self):
+        current = self.vars["output"].get()
+        synced = sync_output_suffix_for_format(current, self.vars["output_format"].get())
+        if synced != current:
+            self.vars["output"].set(synced)
+
+    def _on_output_format_changed(self, _event=None):
+        self._sync_output_extension_with_format()
+        self._log(f"Output format set to {self.vars['output_format'].get()}. Output path suffix updated where safe.")
+
     def _log(self, text: str):
-        self.status.insert("end", text + "\n")
+        tag = None
+        if text.startswith("ERROR"):
+            tag = "error"
+        elif text.startswith("WARNING") or text.startswith("Preview warning"):
+            tag = "warning"
+        elif text.startswith("Created") or text.startswith("Generation complete"):
+            tag = "success"
+        if tag:
+            self.status.insert("end", text + "\n", tag)
+        else:
+            self.status.insert("end", text + "\n")
         self.status.see("end")
 
     def _preset_dir(self) -> Path:
@@ -410,6 +525,8 @@ class GeneratorGui:
         if "nc_power_profile" not in data and "nc_s_max" in data and "nc_power_profile" in self.vars:
             self.vars["nc_power_profile"].set(profile_for_nc_s_max(data["nc_s_max"]))
         self._sync_nc_s_max_from_profile()
+        self._sync_output_extension_with_format()
+        self._schedule_preview_refresh()
 
     def _sync_nc_s_max_from_profile(self) -> None:
         if "nc_power_profile" not in self.vars or "nc_s_max" not in self.vars:
@@ -498,6 +615,164 @@ class GeneratorGui:
         self._refresh_presets()
         self._log("Preset imported: " + str(imported))
 
+    def _bind_auto_preview_updates(self):
+        keys = (
+            "rows",
+            "cols",
+            "tile_size",
+            "gap",
+            "stock_x",
+            "stock_y",
+            "auto_position",
+            "grid_x",
+            "grid_y",
+            "speed_min",
+            "speed_max",
+            "power_min",
+            "power_max",
+            "round_speed_values",
+            "round_power_values",
+            "labels_enabled",
+        )
+        for key in keys:
+            if key in self.vars:
+                self.vars[key].trace_add("write", lambda *_args: self._schedule_preview_refresh())
+
+    def _preview_snapshot(self):
+        settings = self._settings()
+        layout_settings = copy.deepcopy(settings)
+        layout = computed_layout(layout_settings)
+        warnings = validate_layout(settings)
+        rows = int(settings.rows)
+        cols = int(settings.cols)
+        speeds_raw = linspace(settings.speed_min, settings.speed_max, rows)
+        powers_raw = linspace(settings.power_min, settings.power_max, cols)
+        speeds = [int(round(v)) for v in speeds_raw] if settings.round_speed_values else [round(v, 6) for v in speeds_raw]
+        powers = [int(round(v)) for v in powers_raw] if settings.round_power_values else [round(v, 6) for v in powers_raw]
+        return settings, layout, warnings, speeds, powers
+
+    def _draw_layout_preview(self, canvas, settings: GeneratorSettings, layout: Dict[str, float], warnings, compact: bool = False):
+        canvas.delete("all")
+        cw = max(int(canvas.winfo_width() or (300 if compact else 560)), 120)
+        ch = max(int(canvas.winfo_height() or (360 if compact else 460)), 120)
+        pad = 22 if compact else 34
+        sx = max(float(layout["stock_x"]), 1.0)
+        sy = max(float(layout["stock_y"]), 1.0)
+        scale = min((cw - 2 * pad) / sx, (ch - 2 * pad) / sy)
+        scale = max(scale, 0.1)
+
+        def px(x):
+            return pad + x * scale
+
+        def py(y):
+            return ch - pad - y * scale
+
+        gx = layout["grid_x"]
+        gy = layout["grid_y"]
+        grid_w = layout["grid_w"]
+        grid_h = layout["grid_h"]
+        tile = settings.tile_size
+        gap = settings.gap
+        rows = int(settings.rows)
+        cols = int(settings.cols)
+
+        canvas.create_rectangle(px(0), py(sy), px(sx), py(0), outline="#222", width=2)
+        canvas.create_text(px(sx / 2), py(sy) - 12, text=f"Stock {sx:g} x {sy:g} mm", fill="#222")
+        canvas.create_rectangle(
+            px(layout["layout_min_x"]),
+            py(layout["layout_max_y"]),
+            px(layout["layout_max_x"]),
+            py(layout["layout_min_y"]),
+            outline="#cc7a00",
+            dash=(4, 2),
+        )
+        if settings.labels_enabled:
+            canvas.create_rectangle(px(gx), py(gy + grid_h + 12), px(gx + grid_w), py(gy + grid_h), outline="#d7a35d", dash=(3, 2))
+            canvas.create_rectangle(px(gx - 16), py(gy + grid_h), px(gx), py(gy), outline="#d7a35d", dash=(3, 2))
+            if not compact:
+                canvas.create_text(px(gx + grid_w / 2), py(gy + grid_h + 8), text="POWER (%)", fill="#555")
+                canvas.create_text(px(max(2.5, gx - 13)), py(gy + grid_h / 2), text="SPEED", fill="#555", angle=90)
+
+        for r in range(rows):
+            for col in range(cols):
+                x = gx + col * (tile + gap)
+                y = gy + r * (tile + gap)
+                canvas.create_rectangle(px(x), py(y + tile), px(x + tile), py(y), outline="#1f77b4", fill="#eef6ff", width=1)
+
+        canvas.create_rectangle(px(gx), py(gy + grid_h), px(gx + grid_w), py(gy), outline="#0f4c81", width=2)
+        if warnings:
+            canvas.create_text(cw - pad, ch - 10, text=f"{len(warnings)} warning(s)", fill="#9a3412", anchor="e")
+        elif compact:
+            canvas.create_text(cw - pad, ch - 10, text=f"{rows} x {cols}", fill="#166534", anchor="e")
+
+    def _write_preview_summary(self, settings: GeneratorSettings, layout: Dict[str, float], warnings, speeds, powers):
+        if not hasattr(self, "preview_text"):
+            return
+        rows = int(settings.rows)
+        cols = int(settings.cols)
+        self.preview_text.delete("1.0", "end")
+        self.preview_text.insert("end", "Layout summary\n", "heading")
+        self.preview_text.insert("end", "--------------\n")
+        self.preview_text.insert("end", f"Grid: {rows} x {cols}\n")
+        self.preview_text.insert("end", f"Tiles: {rows * cols}\n")
+        self.preview_text.insert("end", f"Grid size: {layout['grid_w']:.1f} x {layout['grid_h']:.1f} mm\n")
+        self.preview_text.insert("end", f"Grid origin: X{layout['grid_x']:.1f} Y{layout['grid_y']:.1f}\n")
+        self.preview_text.insert(
+            "end",
+            f"Approx bounds: X{layout['layout_min_x']:.1f}..{layout['layout_max_x']:.1f}, "
+            f"Y{layout['layout_min_y']:.1f}..{layout['layout_max_y']:.1f}\n\n",
+        )
+        self.preview_text.insert("end", "Speed top -> bottom:\n", "heading")
+        self.preview_text.insert("end", ", ".join(str(v) for v in reversed(speeds)) + "\n\n")
+        self.preview_text.insert("end", "Power left -> right:\n", "heading")
+        self.preview_text.insert("end", ", ".join(str(v) for v in powers) + "\n\n")
+        if warnings:
+            self.preview_text.insert("end", "Warnings:\n", "warning")
+            for w in warnings:
+                self.preview_text.insert("end", "- " + w + "\n", "warning")
+        else:
+            self.preview_text.insert("end", "No layout warnings.\n", "ok")
+
+    def _refresh_preview(self, log_success: bool = False, show_error: bool = False, log_warning: bool = False) -> bool:
+        try:
+            settings, layout, warnings, speeds, powers = self._preview_snapshot()
+            if hasattr(self, "preview_canvas"):
+                self._draw_layout_preview(self.preview_canvas, settings, layout, warnings, compact=False)
+            if hasattr(self, "side_preview_canvas") and self._side_preview_visible:
+                self._draw_layout_preview(self.side_preview_canvas, settings, layout, warnings, compact=True)
+            self._write_preview_summary(settings, layout, warnings, speeds, powers)
+            if hasattr(self, "side_preview_note"):
+                note = f"{int(settings.rows)} x {int(settings.cols)} grid"
+                if warnings:
+                    note += f" - {len(warnings)} layout warning(s)"
+                else:
+                    note += " - layout looks inside stock"
+                self.side_preview_note.set(note)
+            if log_success:
+                self._log("Preview updated.")
+            return True
+        except Exception as e:
+            if hasattr(self, "side_preview_note"):
+                self.side_preview_note.set("Preview waiting for valid numeric values.")
+            if log_warning:
+                self._log("Preview warning: " + str(e))
+            if show_error:
+                self._log("ERROR: " + str(e))
+                messagebox.showerror("Error", str(e))
+            return False
+
+    def _schedule_preview_refresh(self):
+        if self._preview_after_id:
+            self.root.after_cancel(self._preview_after_id)
+        self._preview_after_id = self.root.after(250, self._run_scheduled_preview_refresh)
+
+    def _run_scheduled_preview_refresh(self):
+        self._preview_after_id = None
+        self._refresh_preview()
+
+    def _update_preview(self):
+        self._refresh_preview(log_success=True, show_error=True)
+
     def _settings(self) -> GeneratorSettings:
         def f(name): return float(self.vars[name].get())
         def i(name): return int(float(self.vars[name].get()))
@@ -538,6 +813,23 @@ class GeneratorGui:
             nc_s_max=f("nc_s_max"),
         )
 
+    def _display_value(self, value) -> str:
+        try:
+            f = float(value)
+            return str(int(f)) if f.is_integer() else f"{f:g}"
+        except Exception:
+            return str(value)
+
+    def _next_steps_message(self, output_format: str) -> str:
+        if output_format == "MKS":
+            return "Next: open the .mks in Makera Studio, click Recalculate, then inspect Preview."
+        if output_format == "NC":
+            return "Next: verify the controller S-value scale and preview the .nc in your sender/viewer."
+        return (
+            "Next: open the .mks in Makera Studio, click Recalculate, then inspect Preview.\n"
+            "Also verify the controller S-value scale and preview the .nc in your sender/viewer."
+        )
+
     def _generate(self):
         try:
             settings = self._settings()
@@ -556,16 +848,20 @@ class GeneratorGui:
                     self._log(f"NC lines: {info['lines']} | Tiles: {info['tiles']} | Profile: {info['power_profile']} | S max: {info['s_max']}")
                 else:
                     self._log(f"Paths: {info['paths']} | Shapes: {info['shapes']} | Labels: {info['label_shapes']} | Tiles: {info['tile_shapes']}")
-                self._log("Speed top→bottom: " + ", ".join(str(int(x) if isinstance(x, int) or float(x).is_integer() else x) for x in info["speeds_visual_top_to_bottom"]))
-                self._log("Power left→right: " + ", ".join(str(int(x) if isinstance(x, int) or float(x).is_integer() else x) for x in info["powers_left_to_right"]))
+                self._log("Speed top -> bottom: " + ", ".join(self._display_value(x) for x in info["speeds_visual_top_to_bottom"]))
+                self._log("Power left -> right: " + ", ".join(self._display_value(x) for x in info["powers_left_to_right"]))
                 for warning in info.get("warnings", []):
                     self._log("WARNING: " + warning)
 
-            messagebox.showinfo("Done", "File(s) created.\n\nFor MKS: open in Makera Studio → Recalculate → inspect Preview.\nFor NC: verify S-value scale and preview before use.")
+            self._refresh_preview(log_warning=True)
+            next_steps = self._next_steps_message(settings.output_format)
+            for line in next_steps.splitlines():
+                self._log(line)
+            self._log("Generation complete. Preview and verify before running the laser.")
+            messagebox.showinfo("Done", "File(s) created.\n\n" + next_steps)
         except Exception as e:
             self._log("ERROR: " + str(e))
             messagebox.showerror("Error", str(e))
 
     def run(self):
         self.root.mainloop()
-

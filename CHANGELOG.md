@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.5.0 - 2026-06-05
+
+UI/UX upgrade release.
+
+### Added
+
+- Added a right-side quick preview on wide GUI windows using the same layout
+  preview drawing as the Preview tab.
+- Added automatic preview refresh after successful generation.
+- Added lightweight GUI tooltips and clearer inline hints for output, grid,
+  parameter, laser/NC, label, and preset workflows.
+- Added a small non-intrusive Safety / Verify reminder in the GUI.
+- Added tests for GUI output suffix sync helper behavior.
+
+### Changed
+
+- Improved GUI spacing, grouping, and status/log messages.
+- Improved the Preview tab summary formatting and warning visibility.
+- The GUI output path now updates known generated suffixes `.mks` and `.nc`
+  when switching output format, while leaving custom suffixes unchanged.
+- Bumped visible version text to v1.5.0.
+
 ## v1.4.0 - 2026-06-05
 
 Preset and material workflow release.

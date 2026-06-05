@@ -8,7 +8,7 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 ## Current Release
 
-The current release is **v1.4.0**.
+The current release is **v1.5.0**.
 
 This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
 Windows convenience launcher; the generator itself runs from Python on Windows,
@@ -25,11 +25,14 @@ Linux, and macOS.
 - Generic NC power profiles for Makera, GRBL, 8-bit, and custom S-value scales.
 - Metadata comments in generated generic `.nc` files for easier verification.
 - English GUI.
+- Improved GUI layout with a right-side quick preview on wide windows.
 - Generated labels selectable between English and German.
 - Preset manager with JSON presets, metadata, import/export, and optional
   reference image paths.
 - Auto filename generation and overwrite protection.
-- Approximate preview tab.
+- Approximate preview tab plus automatic preview refresh after generation.
+- In the GUI, the output filename extension follows the selected format where
+  it is safe to update `.mks` / `.nc`.
 
 ## Quick Start
 
@@ -69,7 +72,7 @@ the package includes an `_internal` runtime folder that must stay next to the
 1. Start the GUI.
 2. Open the **Presets** tab.
 3. Load `Cork broad 8x8`.
-4. Go to **Preview** and click `Update Preview`.
+4. Check the quick preview or go to **Preview** and click `Update Preview`.
 5. Click `Generate`.
 6. Open the generated `.mks` in Makera Studio.
 7. Press **Recalculate**.
