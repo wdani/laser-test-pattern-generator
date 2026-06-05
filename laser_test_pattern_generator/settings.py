@@ -11,7 +11,7 @@ LASER_MODES = {
     "Offset Fill": 2,
 }
 
-APP_VERSION = "v1.5.0"
+APP_VERSION = "v1.6.0"
 
 NC_POWER_PROFILES: Dict[str, Optional[float]] = {
     "Makera (0-1)": 1.0,
