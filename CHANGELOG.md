@@ -7,12 +7,15 @@ Preset and material workflow release.
 ### Added
 
 - Added preset metadata support for optional `name`, `material`, `machine`,
-  `laser_module`, `notes`, and `safety_note` fields.
-- Added GUI support for duplicating presets with **Save preset as...**.
+  `laser_module`, `notes`, `safety_note`, and `reference_image` fields.
+- Added GUI support for creating a new preset by typing a new preset name and
+  clicking **Save preset**.
 - Improved preset import/export so JSON files can be copied into and out of the
   local `presets/` folder.
-- Added preset helper tests covering metadata, old-format compatibility, and
-  import/export behavior.
+- Added overwrite confirmation when saving or importing over an existing preset.
+- Added optional `reference_image` preset metadata for result/reference photos.
+- Added preset helper tests covering metadata, old-format compatibility,
+  reference images, overwrite protection, and import/export behavior.
 - Added [docs/PRESETS.md](docs/PRESETS.md) with preset sharing and safety notes.
 - Added conservative preset starting points for cork, wood, cardboard, and
   Makera-style generic NC tests.

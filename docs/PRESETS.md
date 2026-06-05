@@ -21,11 +21,19 @@ Use the GUI **Presets** tab to:
 
 - Load an existing preset.
 - Save changes to the selected preset.
-- Use **Save preset as...** to duplicate a preset under a new name.
+- Type a new preset name in the top preset field and click **Save preset** to
+  create a new preset.
 - Use **Import preset...** to copy a shared JSON preset into your local
   `presets/` folder.
 - Use **Export preset...** to copy the selected preset JSON to another location
   for sharing or backup.
+
+The preset field at the top is the only editable preset name. Preset JSON files
+may still contain `name` or `_preset_name` for compatibility, but the GUI does
+not show a second editable name field.
+
+Saving or importing over an existing preset asks for confirmation first. If you
+cancel, the existing preset is left unchanged.
 
 Preset files can include optional metadata:
 
@@ -35,9 +43,14 @@ Preset files can include optional metadata:
 - `laser_module`
 - `notes`
 - `safety_note`
+- `reference_image`
 
 Older presets without metadata still load. Unknown JSON fields are ignored by
 the GUI, so shared presets can carry extra notes without breaking generation.
+
+`reference_image` is an optional helper path to a photo or result image for the
+preset. It is metadata only for now: the app stores the path but does not manage
+image files or provide a full material journal.
 
 ## Safety
 

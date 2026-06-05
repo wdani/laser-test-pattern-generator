@@ -26,7 +26,8 @@ Linux, and macOS.
 - Metadata comments in generated generic `.nc` files for easier verification.
 - English GUI.
 - Generated labels selectable between English and German.
-- Preset manager with JSON presets, metadata, import, and export.
+- Preset manager with JSON presets, metadata, import/export, and optional
+  reference image paths.
 - Auto filename generation and overwrite protection.
 - Approximate preview tab.
 

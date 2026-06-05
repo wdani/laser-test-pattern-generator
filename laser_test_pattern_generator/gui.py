@@ -6,13 +6,12 @@ from typing import Dict
 
 try:
     import tkinter as tk
-    from tkinter import ttk, filedialog, messagebox, simpledialog
+    from tkinter import ttk, filedialog, messagebox
 except Exception:
     tk = None
     ttk = None
     filedialog = None
     messagebox = None
-    simpledialog = None
 
 from .font import text_segments
 from .generator_mks import generate_mks
@@ -310,11 +309,10 @@ class GeneratorGui:
         self.preset_combo = ttk.Combobox(f, textvariable=self.vars["preset_name"], values=[], width=42)
         self.preset_combo.grid(row=0, column=1, columnspan=4, sticky="we", padx=6, pady=4)
 
-        ttk.Button(f, text="Load selected", command=self._load_selected_preset).grid(row=1, column=0, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Save selected", command=self._save_named_preset).grid(row=1, column=1, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Save preset as...", command=self._save_preset_as).grid(row=1, column=2, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Delete selected", command=self._delete_selected_preset).grid(row=1, column=3, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Refresh", command=self._refresh_presets).grid(row=1, column=4, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Load preset", command=self._load_selected_preset).grid(row=1, column=0, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Save preset", command=self._save_named_preset).grid(row=1, column=1, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Delete selected", command=self._delete_selected_preset).grid(row=1, column=2, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Refresh", command=self._refresh_presets).grid(row=1, column=3, padx=6, pady=6, sticky="w")
 
         sep = ttk.Separator(f, orient="horizontal")
         sep.grid(row=2, column=0, columnspan=5, sticky="we", pady=12)
@@ -325,7 +323,6 @@ class GeneratorGui:
         meta = ttk.LabelFrame(f, text="Preset metadata")
         meta.grid(row=4, column=0, columnspan=5, sticky="we", padx=6, pady=(10, 6))
         metadata_labels = [
-            ("Name", "name"),
             ("Material", "material"),
             ("Machine", "machine"),
             ("Laser module", "laser_module"),
@@ -335,6 +332,11 @@ class GeneratorGui:
         for row, (label, key) in enumerate(metadata_labels):
             ttk.Label(meta, text=label).grid(row=row, column=0, sticky="w", padx=6, pady=3)
             ttk.Entry(meta, textvariable=self._var(key, ""), width=58).grid(row=row, column=1, columnspan=4, sticky="we", padx=6, pady=3)
+        ref_row = len(metadata_labels)
+        ttk.Label(meta, text="Reference image").grid(row=ref_row, column=0, sticky="w", padx=6, pady=3)
+        ttk.Entry(meta, textvariable=self._var("reference_image", ""), width=44).grid(row=ref_row, column=1, columnspan=2, sticky="we", padx=6, pady=3)
+        ttk.Button(meta, text="Browse...", command=self._browse_reference_image).grid(row=ref_row, column=3, sticky="w", padx=6, pady=3)
+        ttk.Button(meta, text="Clear", command=self._clear_reference_image).grid(row=ref_row, column=4, sticky="w", padx=6, pady=3)
         meta.columnconfigure(1, weight=1)
 
         note = ttk.Label(f, text="Presets are starting points. Verify values and material safety on your own machine.", foreground="#555")
@@ -359,6 +361,22 @@ class GeneratorGui:
     def _preset_path(self, name: str) -> Path:
         return preset_path(name)
 
+    def _browse_reference_image(self):
+        path = filedialog.askopenfilename(
+            filetypes=[
+                ("Image files", "*.png *.jpg *.jpeg *.webp"),
+                ("PNG", "*.png"),
+                ("JPEG", "*.jpg *.jpeg"),
+                ("WEBP", "*.webp"),
+                ("All files", "*.*"),
+            ]
+        )
+        if path:
+            self.vars["reference_image"].set(path)
+
+    def _clear_reference_image(self):
+        self.vars["reference_image"].set("")
+
     def _refresh_presets(self):
         names = [name for name, _path in list_presets(self._preset_dir())]
         self.preset_combo["values"] = names
@@ -380,8 +398,6 @@ class GeneratorGui:
         for key in PRESET_METADATA_FIELDS:
             if key in self.vars:
                 self.vars[key].set(data.get(key, ""))
-        if "name" in self.vars and not self.vars["name"].get():
-            self.vars["name"].set(str(data.get("_preset_name") or self.vars["preset_name"].get() or ""))
 
         for key, value in data.items():
             if key.startswith("_"):
@@ -410,20 +426,15 @@ class GeneratorGui:
             return
         data = self._collect_preset_data()
         existing = find_preset_path(name, self._preset_dir())
+        if existing.exists() and not messagebox.askyesno(
+            "Overwrite preset?",
+            f"Preset '{name}' already exists.\n\nOverwrite it?",
+        ):
+            self._log("Preset save canceled.")
+            return
         path = write_preset_file(existing, data, name) if existing.exists() else save_preset_data(name, data, self._preset_dir())
         self._log("Preset saved: " + str(path))
         self._refresh_presets()
-
-    def _save_preset_as(self):
-        current = self.vars["preset_name"].get().strip()
-        name = simpledialog.askstring("Save preset as", "New preset name:", initialvalue=current)
-        if not name:
-            return
-        name = name.strip()
-        self.vars["preset_name"].set(name)
-        if "name" in self.vars:
-            self.vars["name"].set(name)
-        self._save_named_preset()
 
     def _load_selected_preset(self):
         name = self.vars["preset_name"].get().strip()
@@ -469,7 +480,18 @@ class GeneratorGui:
         )
         if not path:
             return
-        imported = import_preset_file(Path(path), self._preset_dir())
+        try:
+            imported = import_preset_file(Path(path), self._preset_dir(), overwrite=False)
+        except FileExistsError:
+            data = read_preset_file(Path(path))
+            name = str(data.get("name") or data.get("_preset_name") or Path(path).stem)
+            if not messagebox.askyesno(
+                "Overwrite preset?",
+                f"Preset '{name}' already exists.\n\nOverwrite it?",
+            ):
+                self._log("Preset import canceled.")
+                return
+            imported = import_preset_file(Path(path), self._preset_dir(), overwrite=True)
         data = read_preset_file(imported)
         self.vars["preset_name"].set(str(data.get("name") or data.get("_preset_name") or imported.stem))
         self._apply_preset_data(data)

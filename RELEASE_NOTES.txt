@@ -12,9 +12,12 @@ Highlights
 - Generic .nc / G-code generation.
 - NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
 - Default generic NC profile is Makera (0-1).
-- Preset manager with metadata fields, Save preset as, import, and export.
-- Optional preset metadata: name, material, machine, laser module, notes, and
-  safety note.
+- Preset manager with metadata fields, import/export, and clearer save behavior.
+- Optional preset metadata: name, material, machine, laser module, notes,
+  safety note, and reference image.
+- Optional reference image metadata for result/reference photos. This is a
+  helper field only, not a full material journal.
+- Saving or importing over an existing preset asks for confirmation first.
 - Conservative preset starting points for cork, wood, cardboard, and
   Makera-style generic NC tests.
 - Preset documentation in docs/PRESETS.md.

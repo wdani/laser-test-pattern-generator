@@ -15,6 +15,7 @@ PRESET_METADATA_FIELDS = (
     "laser_module",
     "notes",
     "safety_note",
+    "reference_image",
 )
 LEGACY_PRESET_NAME_FIELD = "_preset_name"
 
@@ -86,15 +87,28 @@ def write_preset_file(path: Path, data: Dict[str, object], name: Optional[str] =
     return out
 
 
-def save_preset_data(name: str, data: Dict[str, object], directory: Optional[Path] = None) -> Path:
+def save_preset_data(
+    name: str,
+    data: Dict[str, object],
+    directory: Optional[Path] = None,
+    overwrite: bool = True,
+) -> Path:
     root = directory or preset_dir()
     root.mkdir(parents=True, exist_ok=True)
-    return write_preset_file(preset_path(name, root), data, name)
+    path = find_preset_path(name, root)
+    if path.exists() and not overwrite:
+        raise FileExistsError(f"Preset already exists: {path}")
+    return write_preset_file(path, data, name)
 
 
-def import_preset_file(source: Path, directory: Optional[Path] = None, name: Optional[str] = None) -> Path:
+def import_preset_file(
+    source: Path,
+    directory: Optional[Path] = None,
+    name: Optional[str] = None,
+    overwrite: bool = True,
+) -> Path:
     data = read_preset_file(source)
-    return save_preset_data(name or preset_display_name(data, Path(source)), data, directory)
+    return save_preset_data(name or preset_display_name(data, Path(source)), data, directory, overwrite=overwrite)
 
 
 def export_preset_file(name: str, destination: Path, directory: Optional[Path] = None) -> Path:
