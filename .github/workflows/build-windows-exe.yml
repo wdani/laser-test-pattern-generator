@@ -1,0 +1,96 @@
+name: Build Windows Executable
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-exe:
+    name: Build Windows executable
+    runs-on: windows-latest
+
+    env:
+      APP_NAME: LaserTestPatternGenerator
+      PACKAGE_DIR: Laser_Test_Pattern_Generator_windows_experimental
+      ZIP_NAME: Laser_Test_Pattern_Generator_windows_experimental_${{ github.run_number }}.zip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pyinstaller
+
+      - name: Compile main script
+        run: python -m py_compile makera_material_test_generator.py
+
+      - name: Compile GUI launcher
+        run: python -m py_compile run_gui.py
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+
+      - name: Build executable with PyInstaller
+        shell: pwsh
+        run: |
+          python -m PyInstaller `
+            --noconfirm `
+            --clean `
+            --name $env:APP_NAME `
+            --windowed `
+            --onedir `
+            --contents-directory "." `
+            --add-data "run_gui.py;." `
+            --add-data "makera_material_test_generator.py;." `
+            --add-data "templates;templates" `
+            --add-data "presets;presets" `
+            --add-data "docs;docs" `
+            --add-data "README.md;." `
+            --add-data "LICENSE.txt;." `
+            --add-data "CHANGELOG.md;." `
+            --add-data "RELEASE_NOTES.txt;." `
+            run_gui.py
+
+      - name: Create distributable ZIP
+        shell: pwsh
+        run: |
+          $stageRoot = Join-Path $PWD "package"
+          $packagePath = Join-Path $stageRoot $env:PACKAGE_DIR
+          Remove-Item -Recurse -Force $stageRoot -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $packagePath | Out-Null
+
+          Copy-Item -Path "dist\$env:APP_NAME\*" -Destination $packagePath -Recurse -Force
+
+          $requiredPaths = @(
+            "$packagePath\$env:APP_NAME.exe",
+            "$packagePath\run_gui.py",
+            "$packagePath\makera_material_test_generator.py",
+            "$packagePath\templates",
+            "$packagePath\presets",
+            "$packagePath\docs",
+            "$packagePath\README.md",
+            "$packagePath\LICENSE.txt",
+            "$packagePath\CHANGELOG.md",
+            "$packagePath\RELEASE_NOTES.txt"
+          )
+
+          foreach ($path in $requiredPaths) {
+            if (-not (Test-Path $path)) {
+              throw "Missing expected package path: $path"
+            }
+          }
+
+          Compress-Archive -Path $packagePath -DestinationPath "dist\$env:ZIP_NAME" -Force
+
+      - name: Upload executable ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: dist/${{ env.ZIP_NAME }}
