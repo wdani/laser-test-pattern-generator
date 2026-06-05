@@ -16,6 +16,10 @@ Highlights
 - Right-side quick preview on wide windows, using the same layout logic as the
   Preview tab.
 - Preview refreshes automatically after successful generation.
+- Manual preview update buttons were removed because preview now refreshes
+  automatically after generation, preset loads, tab changes, and key layout
+  edits.
+- The right-side quick preview hides while the detailed Preview tab is active.
 - The GUI output filename extension follows the selected format where it is
   safe to update .mks / .nc.
 - Lightweight tooltips for key output, grid, laser/NC, and label controls.
@@ -36,6 +40,10 @@ Highlights
 
 Linux/macOS Start
 -----------------
+
+python3 run_gui.py
+
+or:
 
 python3 makera_material_test_generator.py --gui
 

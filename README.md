@@ -10,9 +10,9 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 The current release is **v1.5.0**.
 
-This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
-Windows convenience launcher; the generator itself runs from Python on Windows,
-Linux, and macOS.
+This is a cross-platform Python/Tkinter tool. The included `.bat` file and
+experimental `.exe` builds are Windows-only convenience launchers; the generator
+itself runs from Python on Windows, Linux, and macOS.
 
 ## Features
 
@@ -30,7 +30,8 @@ Linux, and macOS.
 - Preset manager with JSON presets, metadata, import/export, and optional
   reference image paths.
 - Auto filename generation and overwrite protection.
-- Approximate preview tab plus automatic preview refresh after generation.
+- Approximate preview tab plus automatic preview refresh after generation,
+  preset loading, tab changes, and key layout edits.
 - In the GUI, the output filename extension follows the selected format where
   it is safe to update `.mks` / `.nc`.
 
@@ -47,6 +48,12 @@ start_gui_windows.bat
 ### Linux/macOS
 
 ```bash
+python3 run_gui.py
+```
+
+or:
+
+```bash
 python3 makera_material_test_generator.py --gui
 ```
 
@@ -56,8 +63,8 @@ python3 makera_material_test_generator.py --gui
 python makera_material_test_generator.py --gui
 ```
 
-Tkinter is part of the Python standard library on many installs. On some Linux
-distributions it is packaged separately as `python3-tk`.
+Tkinter is required. It is part of the Python standard library on many installs;
+on some Linux distributions it is packaged separately as `python3-tk`.
 
 ## Windows Executable Builds
 
@@ -72,7 +79,7 @@ the package includes an `_internal` runtime folder that must stay next to the
 1. Start the GUI.
 2. Open the **Presets** tab.
 3. Load `Cork broad 8x8`.
-4. Check the quick preview or go to **Preview** and click `Update Preview`.
+4. Check the quick preview or open the **Preview** tab. Preview updates automatically.
 5. Click `Generate`.
 6. Open the generated `.mks` in Makera Studio.
 7. Press **Recalculate**.

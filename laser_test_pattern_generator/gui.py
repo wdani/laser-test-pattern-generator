@@ -194,6 +194,7 @@ class GeneratorGui:
 
         tabs = ttk.Notebook(left)
         tabs.pack(fill="both", expand=True)
+        self.tabs = tabs
 
         self.tab_grid = ttk.Frame(tabs, padding=10)
         self.tab_params = ttk.Frame(tabs, padding=10)
@@ -215,11 +216,11 @@ class GeneratorGui:
         self._build_labels_tab()
         self._build_preview_tab()
         self._build_presets_tab()
+        tabs.bind("<<NotebookTabChanged>>", self._on_tab_changed, add="+")
 
         buttons = ttk.Frame(left)
         buttons.pack(fill="x", pady=8)
         ttk.Button(buttons, text="Generate", command=self._generate).pack(side="left", padx=6)
-        ttk.Button(buttons, text="Update Preview", command=self._update_preview).pack(side="left", padx=6)
         ttk.Button(buttons, text="Close", command=self.root.destroy).pack(side="left", padx=6)
         ttk.Label(buttons, text="Flow: choose output, set grid and laser values, preview, generate, verify.", foreground="#555").pack(side="left", padx=12)
 
@@ -345,13 +346,12 @@ class GeneratorGui:
         f = self.tab_preview
         top = ttk.Frame(f)
         top.pack(fill="x", pady=(0, 8))
-        ttk.Button(top, text="Update Preview", command=self._update_preview).pack(side="left", padx=6)
         ttk.Label(
             top,
-            text="Approximate 2D layout preview. Real paths are calculated by Makera Studio / your controller.",
+            text="Preview updates automatically. Generated files must still be verified before running.",
             foreground="#555",
             wraplength=680,
-        ).pack(side="left", padx=12)
+        ).pack(side="left", padx=6)
 
         body = ttk.Frame(f)
         body.pack(fill="both", expand=True)
@@ -379,9 +379,8 @@ class GeneratorGui:
         self.side_preview_canvas = tk.Canvas(frame, width=300, height=360, bg="white", highlightthickness=1, highlightbackground="#aaa")
         self.side_preview_canvas.grid(row=1, column=0, sticky="nsew", padx=8, pady=4)
         self.side_preview_canvas.bind("<Configure>", lambda _event: self._schedule_preview_refresh())
-        self.side_preview_note = tk.StringVar(value="Preview updates as layout values change.")
+        self.side_preview_note = tk.StringVar(value="Preview updates automatically as layout values change.")
         ttk.Label(frame, textvariable=self.side_preview_note, foreground="#555", wraplength=280).grid(row=2, column=0, sticky="we", padx=8, pady=4)
-        ttk.Button(frame, text="Update Preview", command=self._update_preview).grid(row=3, column=0, sticky="w", padx=8, pady=(4, 8))
 
     def _build_presets_tab(self):
         f = self.tab_presets
@@ -425,7 +424,7 @@ class GeneratorGui:
     def _update_side_preview_visibility(self, _event=None):
         if not hasattr(self, "side_preview_frame") or not hasattr(self, "work_area"):
             return
-        should_show = self.root.winfo_width() >= 1060
+        should_show = self.root.winfo_width() >= 1060 and not self._is_preview_tab_selected()
         if should_show == self._side_preview_visible:
             return
         self._side_preview_visible = should_show
@@ -436,6 +435,19 @@ class GeneratorGui:
         else:
             self.side_preview_frame.grid_remove()
             self.work_area.columnconfigure(1, weight=0, minsize=0)
+
+    def _is_preview_tab_selected(self) -> bool:
+        if not hasattr(self, "tabs"):
+            return False
+        try:
+            selected = self.tabs.select()
+            return bool(selected) and self.tabs.nametowidget(selected) is self.tab_preview
+        except Exception:
+            return False
+
+    def _on_tab_changed(self, _event=None):
+        self._update_side_preview_visibility()
+        self._refresh_preview(log_warning=True)
 
     def _browse_output(self):
         suffix = expected_output_suffix_for_format(self.vars["output_format"].get())
@@ -563,6 +575,7 @@ class GeneratorGui:
             return
         data = read_preset_file(path)
         self._apply_preset_data(data)
+        self._refresh_preview(log_warning=True)
         self._log("Preset loaded: " + str(path))
 
     def _delete_selected_preset(self):
@@ -613,6 +626,7 @@ class GeneratorGui:
         self.vars["preset_name"].set(str(data.get("name") or data.get("_preset_name") or imported.stem))
         self._apply_preset_data(data)
         self._refresh_presets()
+        self._refresh_preview(log_warning=True)
         self._log("Preset imported: " + str(imported))
 
     def _bind_auto_preview_updates(self):
@@ -769,9 +783,6 @@ class GeneratorGui:
     def _run_scheduled_preview_refresh(self):
         self._preview_after_id = None
         self._refresh_preview()
-
-    def _update_preview(self):
-        self._refresh_preview(log_success=True, show_error=True)
 
     def _settings(self) -> GeneratorSettings:
         def f(name): return float(self.vars[name].get())
