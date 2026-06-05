@@ -6,8 +6,8 @@ version.
 
 The executable package is built with PyInstaller through the manual GitHub
 Actions workflow `Build Windows Executable`. The workflow uses
-`workflow_dispatch`, so it only runs when started manually and is not part of
-the normal push or pull request test workflow.
+`workflow_dispatch` for manual test builds and also runs for version tags such
+as `v1.3.1` or `v1.4.0`.
 
 Double-clicking `LaserTestPatternGenerator.exe` opens the GUI directly. CLI
 users should continue to use the Python script:
@@ -16,9 +16,14 @@ users should continue to use the Python script:
 python makera_material_test_generator.py --help
 ```
 
-The uploaded workflow artifact is the package folder. GitHub downloads workflow
-artifacts as archives automatically, so the workflow does not create a second
-ZIP inside the artifact.
+Manual workflow runs upload the package folder as a workflow artifact. GitHub
+downloads workflow artifacts as archives automatically, so manual builds do not
+create a second ZIP inside the artifact.
+
+Tag builds create a release asset ZIP named like
+`Laser_Test_Pattern_Generator_Windows_v1.3.1.zip` and attach it to the matching
+GitHub Release. The Windows ZIP is still experimental, but it is easier for
+non-Python users to download and try.
 
 The extracted package uses this layout:
 
