@@ -9,10 +9,18 @@ Actions workflow `Build Windows Executable`. The workflow uses
 `workflow_dispatch`, so it only runs when started manually and is not part of
 the normal push or pull request test workflow.
 
+Double-clicking `LaserTestPatternGenerator.exe` opens the GUI directly. CLI
+users should continue to use the Python script:
+
+```bash
+python makera_material_test_generator.py --help
+```
+
 The uploaded artifact is a ZIP package containing the Windows executable plus
 the project files needed beside it:
 
 - `LaserTestPatternGenerator.exe`
+- `run_gui.py`
 - `makera_material_test_generator.py`
 - `templates/`
 - `presets/`

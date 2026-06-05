@@ -31,6 +31,9 @@ jobs:
       - name: Compile main script
         run: python -m py_compile makera_material_test_generator.py
 
+      - name: Compile GUI launcher
+        run: python -m py_compile run_gui.py
+
       - name: Run unit tests
         run: python -m unittest discover -s tests
 
@@ -44,6 +47,7 @@ jobs:
             --windowed `
             --onedir `
             --contents-directory "." `
+            --add-data "run_gui.py;." `
             --add-data "makera_material_test_generator.py;." `
             --add-data "templates;templates" `
             --add-data "presets;presets" `
@@ -52,7 +56,7 @@ jobs:
             --add-data "LICENSE.txt;." `
             --add-data "CHANGELOG.md;." `
             --add-data "RELEASE_NOTES.txt;." `
-            makera_material_test_generator.py
+            run_gui.py
 
       - name: Create distributable ZIP
         shell: pwsh
@@ -66,6 +70,7 @@ jobs:
 
           $requiredPaths = @(
             "$packagePath\$env:APP_NAME.exe",
+            "$packagePath\run_gui.py",
             "$packagePath\makera_material_test_generator.py",
             "$packagePath\templates",
             "$packagePath\presets",
