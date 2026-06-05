@@ -7,6 +7,8 @@ from typing import Optional
 
 from .settings import GeneratorSettings
 
+GENERATED_OUTPUT_SUFFIXES = {".mks", ".nc"}
+
 
 def package_dir() -> Path:
     if getattr(sys, "frozen", False):
@@ -80,6 +82,26 @@ def build_auto_filename(settings: GeneratorSettings, suffix: str) -> str:
         mode,
     ]
     return "_".join(parts) + suffix
+
+
+def expected_output_suffix_for_format(output_format: str) -> str:
+    """Return the visible GUI output suffix for a selected format."""
+    return ".nc" if output_format == "NC" else ".mks"
+
+
+def sync_output_suffix_for_format(path_text: str, output_format: str) -> str:
+    """Adjust known generated output suffixes while leaving custom suffixes alone."""
+    text = str(path_text).strip()
+    if not text:
+        return text
+
+    expected_suffix = expected_output_suffix_for_format(output_format)
+    path = Path(text)
+    suffix = path.suffix.lower()
+
+    if suffix in GENERATED_OUTPUT_SUFFIXES or not suffix:
+        return str(path.with_suffix(expected_suffix))
+    return text
 
 
 def resolve_output_path(path: Path, overwrite_existing: bool, suffix: Optional[str] = None, settings: Optional[GeneratorSettings] = None) -> Path:
