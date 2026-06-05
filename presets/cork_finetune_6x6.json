@@ -1,5 +1,11 @@
 {
-  "_preset_name": "Cork fine tune 6x6",
+  "name": "Cork fine 6x6",
+  "_preset_name": "Cork fine 6x6",
+  "material": "cork",
+  "machine": "",
+  "laser_module": "",
+  "notes": "Narrower cork tuning grid after a broad test has found a useful range.",
+  "safety_note": "Verify cork behavior on scrap first; watch for smoke, charring, and flare-ups.",
   "output_format": "Both",
   "auto_filename": true,
   "material_name": "cork",

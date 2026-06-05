@@ -8,7 +8,7 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 ## Current Release
 
-The current release is **v1.3**.
+The current release is **v1.4.0**.
 
 This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
 Windows convenience launcher; the generator itself runs from Python on Windows,
@@ -26,7 +26,7 @@ Linux, and macOS.
 - Metadata comments in generated generic `.nc` files for easier verification.
 - English GUI.
 - Generated labels selectable between English and German.
-- Preset manager with JSON presets.
+- Preset manager with JSON presets, metadata, import, and export.
 - Auto filename generation and overwrite protection.
 - Approximate preview tab.
 
@@ -175,7 +175,8 @@ Read [docs/SAFETY.md](docs/SAFETY.md).
 
 ## Roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) and
+See [docs/PRESETS.md](docs/PRESETS.md),
+[docs/ROADMAP.md](docs/ROADMAP.md), and
 [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## License

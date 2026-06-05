@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.4.0 - 2026-06-05
+
+Preset and material workflow release.
+
+### Added
+
+- Added preset metadata support for optional `name`, `material`, `machine`,
+  `laser_module`, `notes`, and `safety_note` fields.
+- Added GUI support for duplicating presets with **Save preset as...**.
+- Improved preset import/export so JSON files can be copied into and out of the
+  local `presets/` folder.
+- Added preset helper tests covering metadata, old-format compatibility, and
+  import/export behavior.
+- Added [docs/PRESETS.md](docs/PRESETS.md) with preset sharing and safety notes.
+- Added conservative preset starting points for cork, wood, cardboard, and
+  Makera-style generic NC tests.
+
+### Changed
+
+- Bumped visible version text to v1.4.0.
+- Updated included presets with optional material workflow metadata.
+
 ## v1.3 - 2026-06-05
 
 Small generic NC polish release.

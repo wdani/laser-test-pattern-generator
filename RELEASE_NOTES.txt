@@ -1,8 +1,8 @@
-Laser Test Pattern Generator v1.3
-================================
+Laser Test Pattern Generator v1.4.0
+===================================
 
-This small polish release improves generated generic .nc headers with useful
-metadata comments.
+This release improves the preset and material workflow while keeping generated
+MKS and generic NC toolpath behavior unchanged.
 
 Highlights
 ----------
@@ -12,9 +12,12 @@ Highlights
 - Generic .nc / G-code generation.
 - NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
 - Default generic NC profile is Makera (0-1).
-- Generated .nc files now include header comments with the selected NC power
-  profile, NC S max, power range, speed range, grid size, tile size, gap, laser
-  mode, line interval, and an S-value scale reminder.
+- Preset manager with metadata fields, Save preset as, import, and export.
+- Optional preset metadata: name, material, machine, laser module, notes, and
+  safety note.
+- Conservative preset starting points for cork, wood, cardboard, and
+  Makera-style generic NC tests.
+- Preset documentation in docs/PRESETS.md.
 - Output modes for MKS, NC, or both.
 - English GUI.
 - Generated labels selectable between English and German.
@@ -36,10 +39,10 @@ python makera_material_test_generator.py --gui
 Notes
 -----
 
-- No Windows .exe is included in v1.3.
+- Windows executable builds remain experimental.
 - No third-party Python packages are required.
 - Makera profile maps 20% power to S0.2 and 40% power to S0.4.
 - GRBL profile maps 20% power to S200 and 40% power to S400.
+- Presets are starting points, not guaranteed safe machine settings.
 - Always preview generated .mks files in Makera Studio after Recalculate.
 - Always verify generic .nc files against your controller's S-value scale.
-- Related issue: Closes #7.
