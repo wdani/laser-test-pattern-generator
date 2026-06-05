@@ -155,11 +155,27 @@ class GeneratorSettings:
 
 
 def package_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parent
 
 
+def resource_dir(name: str) -> Path:
+    external = package_dir() / name
+    if external.exists():
+        return external
+
+    bundled_root = getattr(sys, "_MEIPASS", None)
+    if bundled_root:
+        bundled = Path(bundled_root).resolve() / name
+        if bundled.exists():
+            return bundled
+
+    return external
+
+
 def default_template_dir() -> Path:
-    return package_dir() / "templates"
+    return resource_dir("templates")
 
 
 def read_zip_entry(path: Path, name: str) -> bytes:

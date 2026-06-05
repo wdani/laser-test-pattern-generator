@@ -59,7 +59,8 @@ distributions it is packaged separately as `python3-tk`.
 
 Windows executable builds are experimental and generated manually through
 GitHub Actions. Python/Tkinter remains the primary supported version for now;
-see [docs/WINDOWS_EXE.md](docs/WINDOWS_EXE.md).
+the package includes an `_internal` runtime folder that must stay next to the
+`.exe`. See [docs/WINDOWS_EXE.md](docs/WINDOWS_EXE.md).
 
 ## Recommended First Test
 

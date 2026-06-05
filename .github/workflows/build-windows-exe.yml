@@ -9,12 +9,12 @@ permissions:
 jobs:
   build-windows-exe:
     name: Build Windows executable
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     env:
       APP_NAME: LaserTestPatternGenerator
-      PACKAGE_DIR: Laser_Test_Pattern_Generator_windows_experimental
-      ZIP_NAME: Laser_Test_Pattern_Generator_windows_experimental_${{ github.run_number }}.zip
+      PACKAGE_DIR: Laser_Test_Pattern_Generator_windows
+      ARTIFACT_NAME: Laser_Test_Pattern_Generator_windows_experimental_${{ github.run_number }}
 
     steps:
       - name: Check out repository
@@ -46,19 +46,10 @@ jobs:
             --name $env:APP_NAME `
             --windowed `
             --onedir `
-            --contents-directory "." `
-            --add-data "run_gui.py;." `
-            --add-data "makera_material_test_generator.py;." `
-            --add-data "templates;templates" `
-            --add-data "presets;presets" `
-            --add-data "docs;docs" `
-            --add-data "README.md;." `
-            --add-data "LICENSE.txt;." `
-            --add-data "CHANGELOG.md;." `
-            --add-data "RELEASE_NOTES.txt;." `
+            --contents-directory "_internal" `
             run_gui.py
 
-      - name: Create distributable ZIP
+      - name: Stage distributable package
         shell: pwsh
         run: |
           $stageRoot = Join-Path $PWD "package"
@@ -67,11 +58,17 @@ jobs:
           New-Item -ItemType Directory -Path $packagePath | Out-Null
 
           Copy-Item -Path "dist\$env:APP_NAME\*" -Destination $packagePath -Recurse -Force
+          Copy-Item -Path "README.md" -Destination $packagePath -Force
+          Copy-Item -Path "LICENSE.txt" -Destination $packagePath -Force
+          Copy-Item -Path "CHANGELOG.md" -Destination $packagePath -Force
+          Copy-Item -Path "RELEASE_NOTES.txt" -Destination $packagePath -Force
+          Copy-Item -Path "docs" -Destination $packagePath -Recurse -Force
+          Copy-Item -Path "templates" -Destination $packagePath -Recurse -Force
+          Copy-Item -Path "presets" -Destination $packagePath -Recurse -Force
 
           $requiredPaths = @(
             "$packagePath\$env:APP_NAME.exe",
-            "$packagePath\run_gui.py",
-            "$packagePath\makera_material_test_generator.py",
+            "$packagePath\_internal",
             "$packagePath\templates",
             "$packagePath\presets",
             "$packagePath\docs",
@@ -87,10 +84,8 @@ jobs:
             }
           }
 
-          Compress-Archive -Path $packagePath -DestinationPath "dist\$env:ZIP_NAME" -Force
-
-      - name: Upload executable ZIP artifact
+      - name: Upload executable package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ZIP_NAME }}
-          path: dist/${{ env.ZIP_NAME }}
+          name: ${{ env.ARTIFACT_NAME }}
+          path: package/${{ env.PACKAGE_DIR }}

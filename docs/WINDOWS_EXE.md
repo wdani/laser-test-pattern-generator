@@ -16,19 +16,29 @@ users should continue to use the Python script:
 python makera_material_test_generator.py --help
 ```
 
-The uploaded artifact is a ZIP package containing the Windows executable plus
-the project files needed beside it:
+The uploaded workflow artifact is the package folder. GitHub downloads workflow
+artifacts as archives automatically, so the workflow does not create a second
+ZIP inside the artifact.
+
+The extracted package uses this layout:
 
 - `LaserTestPatternGenerator.exe`
-- `run_gui.py`
-- `makera_material_test_generator.py`
-- `templates/`
-- `presets/`
-- `docs/`
 - `README.md`
 - `LICENSE.txt`
 - `CHANGELOG.md`
 - `RELEASE_NOTES.txt`
+- `docs/`
+- `templates/`
+- `presets/`
+- `_internal/`
+
+The `_internal/` folder contains required PyInstaller runtime files such as
+Python DLLs, `.pyd` files, `base_library.zip`, and Tcl/Tk runtime data. Do not
+delete or move it.
+
+Keep `templates/` and `presets/` next to `LaserTestPatternGenerator.exe`.
+Makera Studio `.mks` generation needs the template files, and the GUI preset
+manager reads and writes presets from that visible package folder.
 
 To test a build, download the workflow artifact, extract the ZIP, and run the
 executable from the extracted folder. Windows may show a warning because the
