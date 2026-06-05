@@ -13,13 +13,15 @@ Versioning is documented in [VERSIONING.md](VERSIONING.md).
 - Preset polish.
 - Generic NC profile documentation.
 - Small UI polish.
+- Collect feedback on the experimental Windows executable build workflow.
 
 ## v1.4.0 candidates
 
 - More material presets.
 - Improved preset management.
 - Better generic NC controller profiles.
-- Optional Windows executable build investigation.
+- Stabilize the optional Windows executable build if the experimental workflow
+  proves useful.
 
 ## v2.0.0 / later
 

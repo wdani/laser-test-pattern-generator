@@ -55,6 +55,12 @@ python makera_material_test_generator.py --gui
 Tkinter is part of the Python standard library on many installs. On some Linux
 distributions it is packaged separately as `python3-tk`.
 
+## Windows Executable Builds
+
+Windows executable builds are experimental and generated manually through
+GitHub Actions. Python/Tkinter remains the primary supported version for now;
+see [docs/WINDOWS_EXE.md](docs/WINDOWS_EXE.md).
+
 ## Recommended First Test
 
 1. Start the GUI.
