@@ -8,7 +8,7 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 ## Current Release
 
-The current release is **v1.2**.
+The current release is **v1.3**.
 
 This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
 Windows convenience launcher; the generator itself runs from Python on Windows,
@@ -23,6 +23,7 @@ Linux, and macOS.
 - Configurable test ranges: speed in mm/min and power in percent.
 - Laser modes: Line, Fill, and Offset Fill.
 - Generic NC power profiles for Makera, GRBL, 8-bit, and custom S-value scales.
+- Metadata comments in generated generic `.nc` files for easier verification.
 - English GUI.
 - Generated labels selectable between English and German.
 - Preset manager with JSON presets.
@@ -130,6 +131,10 @@ folders.
 
 Generic `.nc` output is controller-dependent. Different controllers use
 different laser power scales.
+
+Generated `.nc` files include metadata comments at the top with the selected
+NC power profile, S max, grid settings, speed and power ranges, and a reminder
+to verify the S-value scale before running the file.
 
 Since v1.1, the default generic NC profile is **Makera (0-1)**:
 
