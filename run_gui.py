@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""GUI-only launcher for the Windows PyInstaller build."""
+"""GUI-only launcher for Python and Windows PyInstaller builds."""
 
-from makera_material_test_generator import GeneratorGui
+from laser_test_pattern_generator.gui import GeneratorGui
 
 
 def main() -> int:

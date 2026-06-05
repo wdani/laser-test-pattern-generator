@@ -126,7 +126,9 @@ python makera_material_test_generator.py --format MKS --language Deutsch --outpu
 
 ## Repository Layout
 
-- `makera_material_test_generator.py` - main Python/Tkinter app and CLI.
+- `makera_material_test_generator.py` - backwards-compatible CLI/GUI entry point.
+- `run_gui.py` - GUI launcher used by Python users and the Windows exe build.
+- `laser_test_pattern_generator/` - Python package with CLI, GUI, and generator modules.
 - `start_gui_windows.bat` - Windows convenience launcher.
 - `templates/` - Makera Studio template projects used by `.mks` generation.
 - `presets/` - compatible JSON presets for the GUI.
