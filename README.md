@@ -69,19 +69,19 @@ distributions it is packaged separately as `python3-tk`.
 
 ### Grid and stock setup
 
-![Grid and stock setup](docs/screenshots/01-grid-stock-setup.png)
+![Grid and stock setup](docs/screenshots/01-grid-stock-setup.png?v=clean-v1-2)
 
 ### Laser and NC settings
 
-![Laser and NC settings](docs/screenshots/02-laser-nc-settings.png)
+![Laser and NC settings](docs/screenshots/02-laser-nc-settings.png?v=clean-v1-2)
 
 ### Built-in layout preview
 
-![Built-in layout preview](docs/screenshots/03-layout-preview.png)
+![Built-in layout preview](docs/screenshots/03-layout-preview.png?v=clean-v1-2)
 
 ### Makera Studio preview after Recalculate
 
-![Makera Studio preview after Recalculate](docs/screenshots/04-makera-studio-preview.png)
+![Makera Studio preview after Recalculate](docs/screenshots/04-makera-studio-preview.png?v=clean-v1-2)
 
 ## Command Line Examples
 
