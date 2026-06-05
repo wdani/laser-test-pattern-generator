@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import json
 from pathlib import Path
 from typing import Dict
 
@@ -18,7 +17,18 @@ from .font import text_segments
 from .generator_mks import generate_mks
 from .generator_nc import fmt_num, generate_generic_nc, profile_for_nc_s_max
 from .geometry import computed_layout, linspace, validate_layout
-from .presets import preset_dir, preset_path
+from .presets import (
+    PRESET_METADATA_FIELDS,
+    export_preset_file,
+    find_preset_path,
+    import_preset_file,
+    list_presets,
+    preset_dir,
+    preset_path,
+    read_preset_file,
+    save_preset_data,
+    write_preset_file,
+)
 from .settings import (
     APP_VERSION,
     DEFAULT_NC_POWER_PROFILE,
@@ -297,21 +307,40 @@ class GeneratorGui:
         ttk.Label(f, text="Preset").grid(row=0, column=0, sticky="w", padx=6, pady=4)
         self.vars["preset_name"] = tk.StringVar(value="")
         self.preset_combo = ttk.Combobox(f, textvariable=self.vars["preset_name"], values=[], width=42)
-        self.preset_combo.grid(row=0, column=1, columnspan=3, sticky="we", padx=6, pady=4)
+        self.preset_combo.grid(row=0, column=1, columnspan=4, sticky="we", padx=6, pady=4)
 
-        ttk.Button(f, text="Load selected", command=self._load_selected_preset).grid(row=1, column=0, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Save as selected/new", command=self._save_named_preset).grid(row=1, column=1, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Load preset", command=self._load_selected_preset).grid(row=1, column=0, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Save preset", command=self._save_named_preset).grid(row=1, column=1, padx=6, pady=6, sticky="w")
         ttk.Button(f, text="Delete selected", command=self._delete_selected_preset).grid(row=1, column=2, padx=6, pady=6, sticky="w")
         ttk.Button(f, text="Refresh", command=self._refresh_presets).grid(row=1, column=3, padx=6, pady=6, sticky="w")
 
         sep = ttk.Separator(f, orient="horizontal")
-        sep.grid(row=2, column=0, columnspan=4, sticky="we", pady=12)
+        sep.grid(row=2, column=0, columnspan=5, sticky="we", pady=12)
 
-        ttk.Button(f, text="Export preset to file", command=self._save_preset_file).grid(row=3, column=0, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Import preset from file", command=self._load_preset_file).grid(row=3, column=1, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Import preset...", command=self._load_preset_file).grid(row=3, column=0, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Export preset...", command=self._save_preset_file).grid(row=3, column=1, padx=6, pady=6, sticky="w")
 
-        note = ttk.Label(f, text="Built-in/local presets are stored in the package's presets folder.", foreground="#555")
-        note.grid(row=4, column=0, columnspan=4, sticky="w", padx=6, pady=10)
+        meta = ttk.LabelFrame(f, text="Preset metadata")
+        meta.grid(row=4, column=0, columnspan=5, sticky="we", padx=6, pady=(10, 6))
+        metadata_labels = [
+            ("Material", "material"),
+            ("Machine", "machine"),
+            ("Laser module", "laser_module"),
+            ("Notes", "notes"),
+            ("Safety note", "safety_note"),
+        ]
+        for row, (label, key) in enumerate(metadata_labels):
+            ttk.Label(meta, text=label).grid(row=row, column=0, sticky="w", padx=6, pady=3)
+            ttk.Entry(meta, textvariable=self._var(key, ""), width=58).grid(row=row, column=1, columnspan=4, sticky="we", padx=6, pady=3)
+        ref_row = len(metadata_labels)
+        ttk.Label(meta, text="Reference image").grid(row=ref_row, column=0, sticky="w", padx=6, pady=3)
+        ttk.Entry(meta, textvariable=self._var("reference_image", ""), width=44).grid(row=ref_row, column=1, columnspan=2, sticky="we", padx=6, pady=3)
+        ttk.Button(meta, text="Browse...", command=self._browse_reference_image).grid(row=ref_row, column=3, sticky="w", padx=6, pady=3)
+        ttk.Button(meta, text="Clear", command=self._clear_reference_image).grid(row=ref_row, column=4, sticky="w", padx=6, pady=3)
+        meta.columnconfigure(1, weight=1)
+
+        note = ttk.Label(f, text="Presets are starting points. Verify values and material safety on your own machine.", foreground="#555")
+        note.grid(row=5, column=0, columnspan=5, sticky="w", padx=6, pady=10)
         f.columnconfigure(1, weight=1)
 
     def _browse_output(self):
@@ -332,14 +361,24 @@ class GeneratorGui:
     def _preset_path(self, name: str) -> Path:
         return preset_path(name)
 
+    def _browse_reference_image(self):
+        path = filedialog.askopenfilename(
+            filetypes=[
+                ("Image files", "*.png *.jpg *.jpeg *.webp"),
+                ("PNG", "*.png"),
+                ("JPEG", "*.jpg *.jpeg"),
+                ("WEBP", "*.webp"),
+                ("All files", "*.*"),
+            ]
+        )
+        if path:
+            self.vars["reference_image"].set(path)
+
+    def _clear_reference_image(self):
+        self.vars["reference_image"].set("")
+
     def _refresh_presets(self):
-        names = []
-        for path in sorted(self._preset_dir().glob("*.json")):
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-                names.append(str(data.get("_preset_name") or path.stem))
-            except Exception:
-                names.append(path.stem)
+        names = [name for name, _path in list_presets(self._preset_dir())]
         self.preset_combo["values"] = names
         if names and not self.vars.get("preset_name", tk.StringVar()).get():
             self.vars["preset_name"].set(names[0])
@@ -356,6 +395,10 @@ class GeneratorGui:
         return data
 
     def _apply_preset_data(self, data: Dict[str, object]) -> None:
+        for key in PRESET_METADATA_FIELDS:
+            if key in self.vars:
+                self.vars[key].set(data.get(key, ""))
+
         for key, value in data.items():
             if key.startswith("_"):
                 continue
@@ -382,9 +425,14 @@ class GeneratorGui:
             messagebox.showwarning("Preset name missing", "Enter a preset name first.")
             return
         data = self._collect_preset_data()
-        data["_preset_name"] = name
-        path = self._preset_path(name)
-        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        existing = find_preset_path(name, self._preset_dir())
+        if existing.exists() and not messagebox.askyesno(
+            "Overwrite preset?",
+            f"Preset '{name}' already exists.\n\nOverwrite it?",
+        ):
+            self._log("Preset save canceled.")
+            return
+        path = write_preset_file(existing, data, name) if existing.exists() else save_preset_data(name, data, self._preset_dir())
         self._log("Preset saved: " + str(path))
         self._refresh_presets()
 
@@ -392,22 +440,11 @@ class GeneratorGui:
         name = self.vars["preset_name"].get().strip()
         if not name:
             return
-        path = self._preset_path(name)
-        if not path.exists():
-            # fall back to exact existing filename stem lookup
-            candidates = list(self._preset_dir().glob("*.json"))
-            for candidate in candidates:
-                try:
-                    data = json.loads(candidate.read_text(encoding="utf-8"))
-                    if str(data.get("_preset_name") or candidate.stem) == name:
-                        path = candidate
-                        break
-                except Exception:
-                    pass
+        path = find_preset_path(name, self._preset_dir())
         if not path.exists():
             messagebox.showerror("Error", "Preset not found.")
             return
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = read_preset_file(path)
         self._apply_preset_data(data)
         self._log("Preset loaded: " + str(path))
 
@@ -415,7 +452,7 @@ class GeneratorGui:
         name = self.vars["preset_name"].get().strip()
         if not name:
             return
-        path = self._preset_path(name)
+        path = find_preset_path(name, self._preset_dir())
         if path.exists():
             path.unlink()
             self._log("Preset deleted: " + str(path))
@@ -423,16 +460,19 @@ class GeneratorGui:
         self._refresh_presets()
 
     def _save_preset_file(self):
+        name = self.vars["preset_name"].get().strip()
+        if not name:
+            messagebox.showwarning("Preset missing", "Select a preset to export first.")
+            return
         path = filedialog.asksaveasfilename(
             defaultextension=".json",
+            initialfile=f"{name}.json",
             filetypes=[("Preset JSON", "*.json"), ("All files", "*.*")]
         )
         if not path:
             return
-        data = self._collect_preset_data()
-        data["_preset_name"] = Path(path).stem
-        Path(path).write_text(json.dumps(data, indent=2), encoding="utf-8")
-        self._log("Preset exported: " + path)
+        exported = export_preset_file(name, Path(path), self._preset_dir())
+        self._log("Preset exported: " + str(exported))
 
     def _load_preset_file(self):
         path = filedialog.askopenfilename(
@@ -440,9 +480,23 @@ class GeneratorGui:
         )
         if not path:
             return
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        try:
+            imported = import_preset_file(Path(path), self._preset_dir(), overwrite=False)
+        except FileExistsError:
+            data = read_preset_file(Path(path))
+            name = str(data.get("name") or data.get("_preset_name") or Path(path).stem)
+            if not messagebox.askyesno(
+                "Overwrite preset?",
+                f"Preset '{name}' already exists.\n\nOverwrite it?",
+            ):
+                self._log("Preset import canceled.")
+                return
+            imported = import_preset_file(Path(path), self._preset_dir(), overwrite=True)
+        data = read_preset_file(imported)
+        self.vars["preset_name"].set(str(data.get("name") or data.get("_preset_name") or imported.stem))
         self._apply_preset_data(data)
-        self._log("Preset imported: " + path)
+        self._refresh_presets()
+        self._log("Preset imported: " + str(imported))
 
     def _settings(self) -> GeneratorSettings:
         def f(name): return float(self.vars[name].get())

@@ -6,20 +6,20 @@ while improving documentation, polish, and controller clarity.
 
 Versioning is documented in [VERSIONING.md](VERSIONING.md).
 
-## Near-term / v1.3.x
+## Near-term / v1.4.x
 
 - Small bugfixes.
 - Documentation improvements.
 - Preset polish.
 - Generic NC profile documentation.
 - Small UI polish.
+- Material preset feedback and cleanup.
 - Collect feedback on the experimental Windows executable build workflow.
 
-## v1.4.0 candidates
+## v1.5.0 candidates
 
-- More material presets.
-- Improved preset management.
-- Better generic NC controller profiles.
+- More curated material presets.
+- Better generic NC controller profile documentation.
 - Stabilize the optional Windows executable build if the experimental workflow
   proves useful.
 
