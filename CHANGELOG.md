@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.2 - 2026-06-05
+
+Documentation and preview polish release.
+
+### Fixed
+
+- Fixed the Preview tab summary text so line breaks render as real new lines
+  instead of literal `\n` text.
+
+### Added
+
+- Added README screenshots for grid setup, Laser / NC settings, built-in layout
+  preview, and Makera Studio preview after Recalculate.
+
 ## v1.1 - 2026-06-04
 
 Small generic NC power scale fix.

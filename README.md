@@ -8,7 +8,7 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 ## Current Release
 
-The current release is **v1.1**.
+The current release is **v1.2**.
 
 This is a cross-platform Python/Tkinter tool. The included `.bat` file is only a
 Windows convenience launcher; the generator itself runs from Python on Windows,
@@ -64,6 +64,24 @@ distributions it is packaged separately as `python3-tk`.
 6. Open the generated `.mks` in Makera Studio.
 7. Press **Recalculate**.
 8. Check the Preview before exporting or running.
+
+## Screenshots
+
+### Grid and stock setup
+
+![Grid and stock setup](docs/screenshots/01-grid-stock-setup.png)
+
+### Laser and NC settings
+
+![Laser and NC settings](docs/screenshots/02-laser-nc-settings.png)
+
+### Built-in layout preview
+
+![Built-in layout preview](docs/screenshots/03-layout-preview.png)
+
+### Makera Studio preview after Recalculate
+
+![Makera Studio preview after Recalculate](docs/screenshots/04-makera-studio-preview.png)
 
 ## Command Line Examples
 
