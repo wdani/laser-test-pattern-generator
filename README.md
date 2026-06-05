@@ -131,7 +131,7 @@ folders.
 Generic `.nc` output is controller-dependent. Different controllers use
 different laser power scales.
 
-The default v1.1 profile is **Makera (0-1)**:
+Since v1.1, the default generic NC profile is **Makera (0-1)**:
 
 - `0%` power maps to `S0.0`
 - `20%` power maps to `S0.2`

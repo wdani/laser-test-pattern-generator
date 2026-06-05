@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Makera Material Test Generator v1.1 experimental
+Makera Material Test Generator v1.2
 
 Creates Makera Studio .mks project files with a generated material-test grid:
 - real SvgShape geometry in makera.bin
