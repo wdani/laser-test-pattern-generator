@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.3 - 2026-06-05
+
+Small generic NC polish release.
+
+### Changed
+
+- Expanded generated generic `.nc` header comments with generator version,
+  selected NC power profile, NC S max, speed and power ranges, grid size, tile
+  size, gap, laser mode, line interval, and an S-value scale reminder.
+- Bumped visible version text to v1.3.
+
+### Tests
+
+- Added checks that generated `.nc` headers contain the selected NC power
+  profile and resolved NC S max.
+
 ## v1.2 - 2026-06-05
 
 Documentation and preview polish release.

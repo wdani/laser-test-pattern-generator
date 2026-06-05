@@ -44,6 +44,16 @@ class NcPowerProfileTests(unittest.TestCase):
         self.assertIn("M3 S200", text)
         self.assertIn("M3 S400", text)
 
+    def test_header_includes_selected_power_profile(self):
+        text = generate_nc_text("GRBL (0-1000)")
+
+        self.assertIn("; NC power profile: GRBL (0-1000)", text)
+
+    def test_header_includes_resolved_nc_s_max(self):
+        text = generate_nc_text("GRBL (0-1000)")
+
+        self.assertIn("; NC S max: 1000", text)
+
 
 if __name__ == "__main__":
     unittest.main()
