@@ -1,8 +1,8 @@
-Laser Test Pattern Generator v1.1
+Laser Test Pattern Generator v1.2
 ================================
 
-This release fixes the default generic NC laser power scale for Makera-style
-output while keeping the v1.0 generator structure intact.
+This release improves the README with screenshots and fixes Preview tab summary
+line breaks.
 
 Highlights
 ----------
@@ -12,6 +12,8 @@ Highlights
 - Generic .nc / G-code generation.
 - NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
 - Default generic NC profile is Makera (0-1).
+- README screenshots for the main setup and preview workflow.
+- Preview tab summary text now renders line breaks correctly.
 - Output modes for MKS, NC, or both.
 - English GUI.
 - Generated labels selectable between English and German.
@@ -33,7 +35,7 @@ python makera_material_test_generator.py --gui
 Notes
 -----
 
-- No Windows .exe is included in v1.1.
+- No Windows .exe is included in v1.2.
 - No third-party Python packages are required.
 - Makera profile maps 20% power to S0.2 and 40% power to S0.4.
 - GRBL profile maps 20% power to S200 and 40% power to S400.

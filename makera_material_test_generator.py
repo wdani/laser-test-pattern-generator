@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Makera Material Test Generator v1.1 experimental
+Makera Material Test Generator v1.2
 
 Creates Makera Studio .mks project files with a generated material-test grid:
 - real SvgShape geometry in makera.bin
@@ -51,7 +51,7 @@ LASER_MODES = {
     "Offset Fill": 2,
 }
 
-APP_VERSION = "v1.1"
+APP_VERSION = "v1.2"
 
 NC_POWER_PROFILES: Dict[str, Optional[float]] = {
     "Makera (0-1)": 1.0,
@@ -1297,24 +1297,24 @@ class GeneratorGui:
             powers = [int(round(v)) for v in powers_raw] if settings.round_power_values else [round(v, 6) for v in powers_raw]
 
             self.preview_text.delete("1.0", "end")
-            self.preview_text.insert("end", "Layout summary\\n")
-            self.preview_text.insert("end", "--------------\\n")
-            self.preview_text.insert("end", f"Grid: {rows} × {cols}\\n")
-            self.preview_text.insert("end", f"Tiles: {rows * cols}\\n")
-            self.preview_text.insert("end", f"Grid size: {layout['grid_w']:.1f} × {layout['grid_h']:.1f} mm\\n")
-            self.preview_text.insert("end", f"Grid origin: X{layout['grid_x']:.1f} Y{layout['grid_y']:.1f}\\n")
-            self.preview_text.insert("end", f"Approx bounds: X{layout['layout_min_x']:.1f}..{layout['layout_max_x']:.1f}, Y{layout['layout_min_y']:.1f}..{layout['layout_max_y']:.1f}\\n\\n")
-            self.preview_text.insert("end", "Speed top → bottom:\\n")
-            self.preview_text.insert("end", ", ".join(str(v) for v in reversed(speeds)) + "\\n\\n")
-            self.preview_text.insert("end", "Power left → right:\\n")
-            self.preview_text.insert("end", ", ".join(str(v) for v in powers) + "\\n\\n")
+            self.preview_text.insert("end", "Layout summary\n")
+            self.preview_text.insert("end", "--------------\n")
+            self.preview_text.insert("end", f"Grid: {rows} × {cols}\n")
+            self.preview_text.insert("end", f"Tiles: {rows * cols}\n")
+            self.preview_text.insert("end", f"Grid size: {layout['grid_w']:.1f} × {layout['grid_h']:.1f} mm\n")
+            self.preview_text.insert("end", f"Grid origin: X{layout['grid_x']:.1f} Y{layout['grid_y']:.1f}\n")
+            self.preview_text.insert("end", f"Approx bounds: X{layout['layout_min_x']:.1f}..{layout['layout_max_x']:.1f}, Y{layout['layout_min_y']:.1f}..{layout['layout_max_y']:.1f}\n\n")
+            self.preview_text.insert("end", "Speed top → bottom:\n")
+            self.preview_text.insert("end", ", ".join(str(v) for v in reversed(speeds)) + "\n\n")
+            self.preview_text.insert("end", "Power left → right:\n")
+            self.preview_text.insert("end", ", ".join(str(v) for v in powers) + "\n\n")
 
             if warnings:
-                self.preview_text.insert("end", "Warnings:\\n")
+                self.preview_text.insert("end", "Warnings:\n")
                 for w in warnings:
-                    self.preview_text.insert("end", "- " + w + "\\n")
+                    self.preview_text.insert("end", "- " + w + "\n")
             else:
-                self.preview_text.insert("end", "No layout warnings.\\n")
+                self.preview_text.insert("end", "No layout warnings.\n")
 
             self._log("Preview updated.")
         except Exception as e:
