@@ -57,10 +57,11 @@ distributions it is packaged separately as `python3-tk`.
 
 ## Windows Executable Builds
 
-Windows executable builds are experimental and generated manually through
-GitHub Actions. Python/Tkinter remains the primary supported version for now;
+Windows executable builds are experimental and generated through GitHub Actions.
+Python/Tkinter remains the primary supported version for now;
 the package includes an `_internal` runtime folder that must stay next to the
-`.exe`. See [docs/WINDOWS_EXE.md](docs/WINDOWS_EXE.md).
+`.exe`. A Windows ZIP may be available under GitHub Releases; see
+[docs/WINDOWS_EXE.md](docs/WINDOWS_EXE.md).
 
 ## Recommended First Test
 
