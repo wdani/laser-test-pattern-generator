@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.6.0 - 2026-06-05
+
+Modern UI theme release.
+
+### Added
+
+- Added Light and Dark GUI themes using built-in Tkinter/ttk styling.
+- Added local UI theme preference persistence in `config/ui_settings.json`
+  with safe defaults if the settings file is missing or invalid.
+- Added improved numeric controls for common grid, stock, speed, power, laser,
+  and label settings while preserving manual text entry.
+- Added tests for UI theme settings load/save fallback behavior.
+
+### Changed
+
+- Modernized GUI spacing, button hierarchy, labelframe styling, status/log
+  styling, and preview colors for both Light and Dark themes.
+- Styled Generate, Load preset, and Save preset as more prominent actions while
+  keeping destructive/developer actions less prominent.
+- Bumped visible version text to v1.6.0.
+
 ## v1.5.0 - 2026-06-05
 
 UI/UX upgrade release.

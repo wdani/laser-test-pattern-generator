@@ -36,12 +36,77 @@ from .settings import (
     LASER_MODES,
     NC_POWER_PROFILES,
 )
+from .ui_settings import THEME_CHOICES, load_ui_settings, normalize_theme_name, save_ui_settings
+
+
+THEME_PALETTES = {
+    "Light": {
+        "bg": "#f4f6f8",
+        "panel": "#ffffff",
+        "panel_alt": "#eef2f6",
+        "text": "#1f2933",
+        "muted": "#52616f",
+        "border": "#cfd8e3",
+        "entry_bg": "#ffffff",
+        "entry_text": "#1f2933",
+        "select_bg": "#dbeafe",
+        "select_text": "#111827",
+        "accent": "#2563eb",
+        "accent_hover": "#1d4ed8",
+        "accent_text": "#ffffff",
+        "subtle_button": "#e5eaf0",
+        "success": "#166534",
+        "warning": "#9a3412",
+        "error": "#b91c1c",
+        "preview_bg": "#ffffff",
+        "preview_stock": "#1f2933",
+        "preview_text": "#334155",
+        "preview_bounds": "#cc7a00",
+        "preview_grid": "#0f4c81",
+        "preview_tile_fill": "#eef6ff",
+        "preview_label_zone": "#d7a35d",
+        "status_bg": "#ffffff",
+        "tooltip_bg": "#ffffe6",
+        "tooltip_text": "#1f2933",
+    },
+    "Dark": {
+        "bg": "#111827",
+        "panel": "#1f2937",
+        "panel_alt": "#273445",
+        "text": "#e5e7eb",
+        "muted": "#a7b0bd",
+        "border": "#3b4656",
+        "entry_bg": "#111827",
+        "entry_text": "#f3f4f6",
+        "select_bg": "#1d4ed8",
+        "select_text": "#ffffff",
+        "accent": "#3b82f6",
+        "accent_hover": "#60a5fa",
+        "accent_text": "#ffffff",
+        "subtle_button": "#374151",
+        "success": "#86efac",
+        "warning": "#fdba74",
+        "error": "#fca5a5",
+        "preview_bg": "#0f172a",
+        "preview_stock": "#e5e7eb",
+        "preview_text": "#cbd5e1",
+        "preview_bounds": "#fbbf24",
+        "preview_grid": "#93c5fd",
+        "preview_tile_fill": "#1e3a5f",
+        "preview_label_zone": "#c084fc",
+        "status_bg": "#0f172a",
+        "tooltip_bg": "#1f2937",
+        "tooltip_text": "#f3f4f6",
+    },
+}
 
 
 class Tooltip:
-    def __init__(self, widget, text: str, delay_ms: int = 600) -> None:
+    def __init__(self, widget, text: str, bg: str, fg: str, delay_ms: int = 600) -> None:
         self.widget = widget
         self.text = text
+        self.bg = bg
+        self.fg = fg
         self.delay_ms = delay_ms
         self._after_id: Optional[str] = None
         self._window = None
@@ -72,7 +137,8 @@ class Tooltip:
             self._window,
             text=self.text,
             justify="left",
-            background="#ffffe6",
+            background=self.bg,
+            foreground=self.fg,
             relief="solid",
             borderwidth=1,
             padding=(6, 4),
@@ -94,12 +160,16 @@ class GeneratorGui:
 
         self.root = tk.Tk()
         self.root.title(f"Makera Material Test Generator {APP_VERSION}")
-        self.root.geometry("1180x760")
-        self.root.minsize(860, 640)
+        self.root.geometry("1280x820")
+        self.root.minsize(980, 700)
+        self.style = ttk.Style(self.root)
+        self.theme_name = normalize_theme_name(load_ui_settings().get("theme"))
+        self.palette = THEME_PALETTES[self.theme_name]
         self.vars: Dict[str, tk.Variable] = {}
         self.preset_names_var = tk.StringVar(value="")
         self._preview_after_id: Optional[str] = None
         self._side_preview_visible = True
+        self._apply_theme(self.theme_name)
         self._build()
         self._refresh_presets()
         self._bind_auto_preview_updates()
@@ -112,11 +182,11 @@ class GeneratorGui:
 
     def _tooltip(self, widget, text: str):
         if text:
-            Tooltip(widget, text)
+            Tooltip(widget, text, self.palette["tooltip_bg"], self.palette["tooltip_text"])
         return widget
 
     def _hint(self, parent, text: str, row: int, column: int = 0, columnspan: int = 4):
-        label = ttk.Label(parent, text=text, foreground="#555", wraplength=760)
+        label = ttk.Label(parent, text=text, style="Hint.TLabel", wraplength=760)
         label.grid(row=row, column=column, columnspan=columnspan, sticky="w", padx=6, pady=(2, 10))
         return label
 
@@ -130,15 +200,171 @@ class GeneratorGui:
         col: int = 0,
         width: int = 12,
         tooltip: str = "",
+        spin: bool = False,
+        from_: float = 0,
+        to: float = 100000,
+        increment: float = 1,
+        format_: Optional[str] = None,
     ):
         lbl = ttk.Label(parent, text=label)
         lbl.grid(row=row, column=col, sticky="w", padx=6, pady=4)
-        ent = ttk.Entry(parent, textvariable=self._var(varname, default), width=width)
-        ent.grid(row=row, column=col + 1, sticky="w", padx=6, pady=4)
+        var = self._var(varname, default)
+        if spin:
+            wrapper = ttk.Frame(parent, style="Numeric.TFrame")
+            ent = ttk.Entry(wrapper, textvariable=var, width=width)
+            ent.pack(side="left", fill="x")
+            minus = ttk.Button(
+                wrapper,
+                text="-",
+                width=2,
+                style="Numeric.TButton",
+                command=lambda: self._step_numeric_var(var, -increment, from_, to, increment, format_),
+            )
+            plus = ttk.Button(
+                wrapper,
+                text="+",
+                width=2,
+                style="Numeric.TButton",
+                command=lambda: self._step_numeric_var(var, increment, from_, to, increment, format_),
+            )
+            minus.pack(side="left", padx=(4, 1))
+            plus.pack(side="left", padx=(1, 0))
+            wrapper.grid(row=row, column=col + 1, sticky="w", padx=6, pady=4)
+            if tooltip:
+                self._tooltip(minus, tooltip)
+                self._tooltip(plus, tooltip)
+        else:
+            ent = ttk.Entry(parent, textvariable=var, width=width)
+            ent.grid(row=row, column=col + 1, sticky="w", padx=6, pady=4)
         if tooltip:
             self._tooltip(lbl, tooltip)
             self._tooltip(ent, tooltip)
         return ent
+
+    def _step_numeric_var(self, var, delta: float, minimum: float, maximum: float, increment: float, format_: Optional[str]) -> None:
+        current_text = str(var.get()).strip()
+        try:
+            current = float(current_text)
+        except ValueError:
+            current = minimum if delta > 0 else maximum
+
+        value = min(max(current + delta, minimum), maximum)
+        var.set(self._format_numeric_value(value, increment, format_))
+
+    def _format_numeric_value(self, value: float, increment: float, format_: Optional[str] = None) -> str:
+        if format_:
+            return format_ % value
+        if float(increment).is_integer() and float(value).is_integer():
+            return str(int(round(value)))
+        text = f"{value:.6f}".rstrip("0").rstrip(".")
+        return text or "0"
+
+    def _apply_theme(self, theme_name: str, persist: bool = False) -> None:
+        self.theme_name = normalize_theme_name(theme_name)
+        self.palette = THEME_PALETTES[self.theme_name]
+        if persist:
+            try:
+                save_ui_settings({"theme": self.theme_name})
+            except Exception as exc:
+                if hasattr(self, "status"):
+                    self._log("WARNING: Could not save UI theme setting: " + str(exc))
+
+        p = self.palette
+        try:
+            self.style.theme_use("clam")
+        except Exception:
+            pass
+
+        self.root.configure(background=p["bg"])
+        self.root.option_add("*TCombobox*Listbox.background", p["entry_bg"])
+        self.root.option_add("*TCombobox*Listbox.foreground", p["entry_text"])
+        self.root.option_add("*TCombobox*Listbox.selectBackground", p["select_bg"])
+        self.root.option_add("*TCombobox*Listbox.selectForeground", p["select_text"])
+
+        self.style.configure(".", background=p["bg"], foreground=p["text"], font=("Segoe UI", 9))
+        self.style.configure("TFrame", background=p["bg"])
+        self.style.configure("TLabel", background=p["bg"], foreground=p["text"])
+        self.style.configure("Hint.TLabel", background=p["bg"], foreground=p["muted"])
+        self.style.configure("Safety.TLabel", background=p["bg"], foreground=p["warning"])
+        self.style.configure("TLabelframe", background=p["bg"], bordercolor=p["border"], relief="solid")
+        self.style.configure("TLabelframe.Label", background=p["bg"], foreground=p["text"], font=("Segoe UI", 9, "bold"))
+        self.style.configure("TNotebook", background=p["bg"], borderwidth=0)
+        self.style.configure("TNotebook.Tab", background=p["panel_alt"], foreground=p["muted"], padding=(14, 7))
+        self.style.map(
+            "TNotebook.Tab",
+            background=[("selected", p["panel"]), ("active", p["panel"])],
+            foreground=[("selected", p["text"]), ("active", p["text"])],
+        )
+        self.style.configure("TEntry", fieldbackground=p["entry_bg"], foreground=p["entry_text"], bordercolor=p["border"], insertcolor=p["entry_text"], padding=4)
+        self.style.configure("TCombobox", fieldbackground=p["entry_bg"], foreground=p["entry_text"], bordercolor=p["border"], arrowcolor=p["muted"], padding=4)
+        self.style.map(
+            "TCombobox",
+            fieldbackground=[("readonly", p["entry_bg"])],
+            selectbackground=[("readonly", p["entry_bg"])],
+            selectforeground=[("readonly", p["entry_text"])],
+            foreground=[("readonly", p["entry_text"])],
+        )
+        self.style.configure("TCheckbutton", background=p["bg"], foreground=p["text"], padding=4)
+        self.style.configure("TButton", background=p["subtle_button"], foreground=p["text"], padding=(12, 7), borderwidth=1)
+        self.style.map("TButton", background=[("active", p["panel_alt"])], foreground=[("disabled", p["muted"])])
+        self.style.configure("Accent.TButton", background=p["accent"], foreground=p["accent_text"], padding=(14, 8), borderwidth=1)
+        self.style.map("Accent.TButton", background=[("active", p["accent_hover"])], foreground=[("active", p["accent_text"])])
+        self.style.configure("Subtle.TButton", background=p["subtle_button"], foreground=p["muted"], padding=(10, 6), borderwidth=1)
+        self.style.configure("Numeric.TFrame", background=p["bg"])
+        self.style.configure("Numeric.TButton", background=p["panel_alt"], foreground=p["text"], padding=(4, 2), borderwidth=1, relief="flat")
+        self.style.map(
+            "Numeric.TButton",
+            background=[("active", p["subtle_button"])],
+            foreground=[("active", p["text"]), ("disabled", p["muted"])],
+        )
+
+        self._style_tk_widgets()
+        if hasattr(self, "side_preview_canvas") or hasattr(self, "preview_canvas"):
+            self._refresh_preview(log_warning=True)
+
+    def _style_tk_widgets(self) -> None:
+        p = self.palette
+        if hasattr(self, "status"):
+            self.status.configure(
+                bg=p["status_bg"],
+                fg=p["text"],
+                insertbackground=p["text"],
+                selectbackground=p["select_bg"],
+                selectforeground=p["select_text"],
+                relief="flat",
+                borderwidth=1,
+                highlightthickness=1,
+                highlightbackground=p["border"],
+            )
+            self.status.tag_configure("warning", foreground=p["warning"])
+            self.status.tag_configure("error", foreground=p["error"])
+            self.status.tag_configure("success", foreground=p["success"])
+
+        if hasattr(self, "preview_text"):
+            self.preview_text.configure(
+                bg=p["panel"],
+                fg=p["text"],
+                insertbackground=p["text"],
+                selectbackground=p["select_bg"],
+                selectforeground=p["select_text"],
+                relief="flat",
+                borderwidth=1,
+                highlightthickness=1,
+                highlightbackground=p["border"],
+            )
+            self.preview_text.tag_configure("heading", foreground=p["text"], font=("Segoe UI", 10, "bold"))
+            self.preview_text.tag_configure("warning", foreground=p["warning"])
+            self.preview_text.tag_configure("ok", foreground=p["success"])
+
+        for name in ("preview_canvas", "side_preview_canvas"):
+            if hasattr(self, name):
+                getattr(self, name).configure(bg=p["preview_bg"], highlightbackground=p["border"])
+
+    def _on_theme_changed(self, _event=None) -> None:
+        theme = normalize_theme_name(self.vars["ui_theme"].get())
+        self.vars["ui_theme"].set(theme)
+        self._apply_theme(theme, persist=True)
+        self._log(f"Theme set to {theme}.")
 
     def _build(self):
         main = ttk.Frame(self.root, padding=10)
@@ -151,7 +377,7 @@ class GeneratorGui:
         output_entry = ttk.Entry(output, textvariable=self.vars["output"], width=78)
         output_entry.grid(row=0, column=0, columnspan=5, padx=6, pady=6, sticky="we")
         self._tooltip(output_entry, "Known generated suffixes .mks and .nc follow the selected format.")
-        ttk.Button(output, text="Browse...", command=self._browse_output).grid(row=0, column=5, padx=6, pady=6)
+        ttk.Button(output, text="Browse...", command=self._browse_output, style="Subtle.TButton").grid(row=0, column=5, padx=6, pady=6)
 
         self._var("output_format", "MKS")
         ttk.Label(output, text="Format").grid(row=1, column=0, sticky="w", padx=6, pady=3)
@@ -170,14 +396,20 @@ class GeneratorGui:
         ttk.Label(
             output,
             text="MKS = Makera Studio project. NC = generic G-code / NC. Both keeps .mks as the visible base path.",
-            foreground="#555",
-        ).grid(row=2, column=0, columnspan=6, sticky="w", padx=6, pady=(0, 6))
+            style="Hint.TLabel",
+        ).grid(row=2, column=0, columnspan=4, sticky="w", padx=6, pady=(0, 6))
+        ttk.Label(output, text="Theme").grid(row=2, column=4, sticky="e", padx=6, pady=(0, 6))
+        self._var("ui_theme", self.theme_name)
+        theme_combo = ttk.Combobox(output, textvariable=self.vars["ui_theme"], values=list(THEME_CHOICES), state="readonly", width=10)
+        theme_combo.grid(row=2, column=5, sticky="w", padx=6, pady=(0, 6))
+        theme_combo.bind("<<ComboboxSelected>>", self._on_theme_changed)
+        self._tooltip(theme_combo, "Switch between Light and Dark UI themes. The choice is saved locally.")
         output.columnconfigure(0, weight=1)
 
         safety = ttk.Label(
             main,
             text="Safety / verify: presets are starting points. Always preview generated files before running the laser.",
-            foreground="#7a4a00",
+            style="Safety.TLabel",
             wraplength=1100,
         )
         safety.pack(fill="x", pady=(0, 8))
@@ -218,21 +450,24 @@ class GeneratorGui:
         self._build_presets_tab()
         tabs.bind("<<NotebookTabChanged>>", self._on_tab_changed, add="+")
 
-        buttons = ttk.Frame(left)
-        buttons.pack(fill="x", pady=8)
-        ttk.Button(buttons, text="Generate", command=self._generate).pack(side="left", padx=6)
-        ttk.Button(buttons, text="Close", command=self.root.destroy).pack(side="left", padx=6)
-        ttk.Label(buttons, text="Flow: choose output, set grid and laser values, preview, generate, verify.", foreground="#555").pack(side="left", padx=12)
+        self._build_bottom_bar(main)
 
-        self.status = tk.Text(left, height=8, wrap="word")
-        self.status.pack(fill="both", expand=False)
+        self._build_side_preview(work)
+        self.root.bind("<Configure>", self._update_side_preview_visibility, add="+")
+        self._style_tk_widgets()
+
+    def _build_bottom_bar(self, parent):
+        buttons = ttk.Frame(parent)
+        buttons.pack(fill="x", pady=(8, 4))
+        ttk.Button(buttons, text="Generate", command=self._generate, style="Accent.TButton").pack(side="left", padx=(0, 8))
+        ttk.Label(buttons, text="Flow: choose output, set grid and laser values, preview, generate, verify.", style="Hint.TLabel").pack(side="left", padx=6)
+
+        self.status = tk.Text(parent, height=7, wrap="word")
+        self.status.pack(fill="x", expand=False)
         self.status.tag_configure("warning", foreground="#9a3412")
         self.status.tag_configure("error", foreground="#b91c1c")
         self.status.tag_configure("success", foreground="#166534")
         self._log("Ready. Choose output, preview the layout, generate files, then verify them before running.")
-
-        self._build_side_preview(work)
-        self.root.bind("<Configure>", self._update_side_preview_visibility, add="+")
 
     def _build_grid_tab(self):
         f = self.tab_grid
@@ -240,10 +475,10 @@ class GeneratorGui:
 
         grid = ttk.LabelFrame(f, text="Test grid")
         grid.grid(row=0, column=0, sticky="we", padx=2, pady=(0, 10))
-        self._entry(grid, "Rows", "rows", "6", 0, 0, tooltip="Rows vary the speed range from bottom to top.")
-        self._entry(grid, "Columns", "cols", "6", 0, 2, tooltip="Columns vary the power range from left to right.")
-        self._entry(grid, "Tile size (mm)", "tile_size", "8.0", 1, 0)
-        self._entry(grid, "Gap (mm)", "gap", "2.0", 1, 2)
+        self._entry(grid, "Rows", "rows", "6", 0, 0, tooltip="Rows vary the speed range from bottom to top.", spin=True, from_=1, to=100, increment=1)
+        self._entry(grid, "Columns", "cols", "6", 0, 2, tooltip="Columns vary the power range from left to right.", spin=True, from_=1, to=100, increment=1)
+        self._entry(grid, "Tile size (mm)", "tile_size", "8.0", 1, 0, spin=True, from_=0.5, to=500, increment=0.5)
+        self._entry(grid, "Gap (mm)", "gap", "2.0", 1, 2, spin=True, from_=0, to=200, increment=0.5)
         self._hint(grid, "Rows and columns define the experiment grid. Tile size and gap only affect layout.", 2)
         grid.columnconfigure(1, weight=1)
         grid.columnconfigure(3, weight=1)
@@ -254,15 +489,15 @@ class GeneratorGui:
         auto = ttk.Checkbutton(position, text="Auto position inside stock", variable=self.vars["auto_position"])
         auto.grid(row=0, column=0, columnspan=2, sticky="w", padx=6, pady=4)
         self._tooltip(auto, "When enabled, the grid is placed inside the stock with room for labels.")
-        self._entry(position, "Grid X manual", "grid_x", "18.0", 1, 0, tooltip="Used only when Auto position is disabled.")
-        self._entry(position, "Grid Y manual", "grid_y", "8.0", 1, 2, tooltip="Used only when Auto position is disabled.")
+        self._entry(position, "Grid X manual", "grid_x", "18.0", 1, 0, tooltip="Used only when Auto position is disabled.", spin=True, from_=-1000, to=1000, increment=1)
+        self._entry(position, "Grid Y manual", "grid_y", "8.0", 1, 2, tooltip="Used only when Auto position is disabled.", spin=True, from_=-1000, to=1000, increment=1)
         self._hint(position, "Manual Grid X/Y are used only when Auto position is disabled.", 2)
 
         stock = ttk.LabelFrame(f, text="Stock")
         stock.grid(row=2, column=0, sticky="we", padx=2, pady=(0, 10))
-        self._entry(stock, "Stock X (mm)", "stock_x", "100", 0, 0)
-        self._entry(stock, "Stock Y (mm)", "stock_y", "100", 0, 2)
-        self._entry(stock, "Stock Z (mm)", "stock_z", "20", 1, 0)
+        self._entry(stock, "Stock X (mm)", "stock_x", "100", 0, 0, spin=True, from_=1, to=2000, increment=1)
+        self._entry(stock, "Stock Y (mm)", "stock_y", "100", 0, 2, spin=True, from_=1, to=2000, increment=1)
+        self._entry(stock, "Stock Z (mm)", "stock_z", "20", 1, 0, spin=True, from_=0, to=500, increment=1)
         self._hint(stock, "Stock dimensions are used for layout checks and Makera project stock metadata.", 2)
 
     def _build_params_tab(self):
@@ -271,10 +506,10 @@ class GeneratorGui:
 
         ranges = ttk.LabelFrame(f, text="Speed and power ranges")
         ranges.grid(row=0, column=0, sticky="we", padx=2, pady=(0, 10))
-        self._entry(ranges, "Speed min (mm/min)", "speed_min", "2200", 0, 0, tooltip="Lowest generated tile speed.")
-        self._entry(ranges, "Speed max (mm/min)", "speed_max", "2800", 0, 2, tooltip="Highest generated tile speed.")
-        self._entry(ranges, "Power min (%)", "power_min", "20", 1, 0, tooltip="Lowest generated tile power.")
-        self._entry(ranges, "Power max (%)", "power_max", "40", 1, 2, tooltip="Highest generated tile power.")
+        self._entry(ranges, "Speed min (mm/min)", "speed_min", "2200", 0, 0, tooltip="Lowest generated tile speed.", spin=True, from_=1, to=50000, increment=50)
+        self._entry(ranges, "Speed max (mm/min)", "speed_max", "2800", 0, 2, tooltip="Highest generated tile speed.", spin=True, from_=1, to=50000, increment=50)
+        self._entry(ranges, "Power min (%)", "power_min", "20", 1, 0, tooltip="Lowest generated tile power.", spin=True, from_=0, to=100, increment=1)
+        self._entry(ranges, "Power max (%)", "power_max", "40", 1, 2, tooltip="Highest generated tile power.", spin=True, from_=0, to=100, increment=1)
         self._hint(ranges, "Speed is interpolated across rows. Power is interpolated across columns.", 2)
 
         rounding = ttk.LabelFrame(f, text="Rounding")
@@ -300,9 +535,9 @@ class GeneratorGui:
         mode_combo = ttk.Combobox(tile, textvariable=self.vars["mode"], values=list(LASER_MODES), state="readonly", width=18)
         mode_combo.grid(row=0, column=1, sticky="w", padx=6, pady=4)
         self._tooltip(mode_combo, "Line outlines tiles. Fill scans lines. Offset Fill creates inward contours.")
-        self._entry(tile, "Line interval (mm)", "line_interval", "0.10", 0, 2, tooltip="Spacing between fill lines or offset contours.")
-        self._entry(tile, "Passes", "passes", "1", 1, 0, tooltip="Repeat each tile pattern this many times.")
-        self._entry(tile, "Scan angle", "scan_angle", "0", 1, 2, tooltip="Fill-line angle in degrees for Fill mode.")
+        self._entry(tile, "Line interval (mm)", "line_interval", "0.10", 0, 2, tooltip="Spacing between fill lines or offset contours.", spin=True, from_=0.01, to=10, increment=0.01, format_="%.2f")
+        self._entry(tile, "Passes", "passes", "1", 1, 0, tooltip="Repeat each tile pattern this many times.", spin=True, from_=1, to=20, increment=1)
+        self._entry(tile, "Scan angle", "scan_angle", "0", 1, 2, tooltip="Fill-line angle in degrees for Fill mode.", spin=True, from_=-180, to=180, increment=5)
         self.vars["bidirectional"] = tk.BooleanVar(value=True)
         bidirectional = ttk.Checkbutton(tile, text="Bi-directional Fill", variable=self.vars["bidirectional"])
         bidirectional.grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=4)
@@ -317,7 +552,7 @@ class GeneratorGui:
         profile_combo.grid(row=0, column=1, sticky="w", padx=6, pady=4)
         profile_combo.bind("<<ComboboxSelected>>", lambda _event: self._sync_nc_s_max_from_profile())
         self._tooltip(profile_combo, "Select the S-value scale your NC controller expects.")
-        self._entry(nc, "NC S max", "nc_s_max", "1", 1, 0, tooltip="Maximum laser S value for generic NC output. Custom keeps manual input.")
+        self._entry(nc, "NC S max", "nc_s_max", "1", 1, 0, tooltip="Maximum laser S value for generic NC output. Custom keeps manual input.", spin=True, from_=0, to=100000, increment=0.1)
         self._hint(nc, "Generic NC only: Makera uses S0.0-S1.0; GRBL often uses S0-S1000; 8-bit uses S0-S255.", 2)
 
     def _build_labels_tab(self):
@@ -332,14 +567,14 @@ class GeneratorGui:
         ttk.Label(labels, text="Language").grid(row=0, column=2, sticky="w", padx=6, pady=4)
         self.vars["language"] = tk.StringVar(value="English")
         ttk.Combobox(labels, textvariable=self.vars["language"], values=["English", "Deutsch"], state="readonly", width=12).grid(row=0, column=3, sticky="w", padx=6, pady=4)
-        self._entry(labels, "Label speed", "label_speed", "2500", 1, 0, tooltip="Feed rate used for label strokes.")
-        self._entry(labels, "Label power (%)", "label_power", "25", 1, 2, tooltip="Laser power used for label strokes.")
+        self._entry(labels, "Label speed", "label_speed", "2500", 1, 0, tooltip="Feed rate used for label strokes.", spin=True, from_=1, to=50000, increment=50)
+        self._entry(labels, "Label power (%)", "label_power", "25", 1, 2, tooltip="Laser power used for label strokes.", spin=True, from_=0, to=100, increment=1)
         ttk.Label(labels, text="Label mode").grid(row=2, column=0, sticky="w", padx=6, pady=4)
         self.vars["label_mode"] = tk.StringVar(value="Line")
         label_mode = ttk.Combobox(labels, textvariable=self.vars["label_mode"], values=list(LASER_MODES), state="readonly", width=18)
         label_mode.grid(row=2, column=1, sticky="w", padx=6, pady=4)
         self._tooltip(label_mode, "Label strokes can use the same mode names as tile geometry.")
-        self._entry(labels, "Label thickness", "label_thickness", "0.06", 2, 2, tooltip="Approximate stroke width for label geometry.")
+        self._entry(labels, "Label thickness", "label_thickness", "0.06", 2, 2, tooltip="Approximate stroke width for label geometry.", spin=True, from_=0.01, to=5, increment=0.01, format_="%.2f")
         self._hint(labels, "Labels are simple built-in stroke text. Geometry behavior is unchanged.", 3)
 
     def _build_preview_tab(self):
@@ -349,7 +584,7 @@ class GeneratorGui:
         ttk.Label(
             top,
             text="Preview updates automatically. Generated files must still be verified before running.",
-            foreground="#555",
+            style="Hint.TLabel",
             wraplength=680,
         ).pack(side="left", padx=6)
 
@@ -373,14 +608,14 @@ class GeneratorGui:
         ttk.Label(
             frame,
             text="Live approximate layout. Use the Preview tab for details.",
-            foreground="#555",
+            style="Hint.TLabel",
             wraplength=280,
         ).grid(row=0, column=0, sticky="we", padx=8, pady=(8, 4))
         self.side_preview_canvas = tk.Canvas(frame, width=300, height=360, bg="white", highlightthickness=1, highlightbackground="#aaa")
         self.side_preview_canvas.grid(row=1, column=0, sticky="nsew", padx=8, pady=4)
         self.side_preview_canvas.bind("<Configure>", lambda _event: self._schedule_preview_refresh())
         self.side_preview_note = tk.StringVar(value="Preview updates automatically as layout values change.")
-        ttk.Label(frame, textvariable=self.side_preview_note, foreground="#555", wraplength=280).grid(row=2, column=0, sticky="we", padx=8, pady=4)
+        ttk.Label(frame, textvariable=self.side_preview_note, style="Hint.TLabel", wraplength=280).grid(row=2, column=0, sticky="we", padx=8, pady=4)
 
     def _build_presets_tab(self):
         f = self.tab_presets
@@ -391,15 +626,15 @@ class GeneratorGui:
         self.preset_combo.grid(row=0, column=1, columnspan=4, sticky="we", padx=6, pady=4)
         self._tooltip(self.preset_combo, "This top field is the only editable preset name. Type a new name, then click Save preset.")
 
-        ttk.Button(f, text="Load preset", command=self._load_selected_preset).grid(row=1, column=0, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Save preset", command=self._save_named_preset).grid(row=1, column=1, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Delete selected", command=self._delete_selected_preset).grid(row=1, column=2, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Refresh", command=self._refresh_presets).grid(row=1, column=3, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Load preset", command=self._load_selected_preset, style="Accent.TButton").grid(row=1, column=0, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Save preset", command=self._save_named_preset, style="Accent.TButton").grid(row=1, column=1, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Delete selected", command=self._delete_selected_preset, style="Subtle.TButton").grid(row=1, column=2, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Refresh", command=self._refresh_presets, style="Subtle.TButton").grid(row=1, column=3, padx=6, pady=6, sticky="w")
 
         sep = ttk.Separator(f, orient="horizontal")
         sep.grid(row=2, column=0, columnspan=5, sticky="we", pady=12)
-        ttk.Button(f, text="Import preset...", command=self._load_preset_file).grid(row=3, column=0, padx=6, pady=6, sticky="w")
-        ttk.Button(f, text="Export preset...", command=self._save_preset_file).grid(row=3, column=1, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Import preset...", command=self._load_preset_file, style="Subtle.TButton").grid(row=3, column=0, padx=6, pady=6, sticky="w")
+        ttk.Button(f, text="Export preset...", command=self._save_preset_file, style="Subtle.TButton").grid(row=3, column=1, padx=6, pady=6, sticky="w")
 
         meta = ttk.LabelFrame(f, text="Preset metadata")
         meta.grid(row=4, column=0, columnspan=5, sticky="we", padx=6, pady=(10, 6))
@@ -416,8 +651,8 @@ class GeneratorGui:
         ref_row = len(metadata_labels)
         ttk.Label(meta, text="Reference image").grid(row=ref_row, column=0, sticky="w", padx=6, pady=3)
         ttk.Entry(meta, textvariable=self._var("reference_image", ""), width=44).grid(row=ref_row, column=1, columnspan=2, sticky="we", padx=6, pady=3)
-        ttk.Button(meta, text="Browse...", command=self._browse_reference_image).grid(row=ref_row, column=3, sticky="w", padx=6, pady=3)
-        ttk.Button(meta, text="Clear", command=self._clear_reference_image).grid(row=ref_row, column=4, sticky="w", padx=6, pady=3)
+        ttk.Button(meta, text="Browse...", command=self._browse_reference_image, style="Subtle.TButton").grid(row=ref_row, column=3, sticky="w", padx=6, pady=3)
+        ttk.Button(meta, text="Clear", command=self._clear_reference_image, style="Subtle.TButton").grid(row=ref_row, column=4, sticky="w", padx=6, pady=3)
         meta.columnconfigure(1, weight=1)
         self._hint(f, "Typing a new preset name and clicking Save preset creates a new preset. Existing files ask before overwrite.", 5, column=0, columnspan=5)
 
@@ -513,7 +748,7 @@ class GeneratorGui:
     def _collect_preset_data(self) -> Dict[str, object]:
         data: Dict[str, object] = {}
         for key, var in self.vars.items():
-            if key == "preset_name":
+            if key in ("preset_name", "ui_theme"):
                 continue
             try:
                 data[key] = var.get()
@@ -528,6 +763,8 @@ class GeneratorGui:
 
         for key, value in data.items():
             if key.startswith("_"):
+                continue
+            if key == "ui_theme":
                 continue
             if key in self.vars:
                 try:
@@ -667,6 +904,8 @@ class GeneratorGui:
 
     def _draw_layout_preview(self, canvas, settings: GeneratorSettings, layout: Dict[str, float], warnings, compact: bool = False):
         canvas.delete("all")
+        p = self.palette
+        canvas.configure(bg=p["preview_bg"], highlightbackground=p["border"])
         cw = max(int(canvas.winfo_width() or (300 if compact else 560)), 120)
         ch = max(int(canvas.winfo_height() or (360 if compact else 460)), 120)
         pad = 22 if compact else 34
@@ -690,34 +929,34 @@ class GeneratorGui:
         rows = int(settings.rows)
         cols = int(settings.cols)
 
-        canvas.create_rectangle(px(0), py(sy), px(sx), py(0), outline="#222", width=2)
-        canvas.create_text(px(sx / 2), py(sy) - 12, text=f"Stock {sx:g} x {sy:g} mm", fill="#222")
+        canvas.create_rectangle(px(0), py(sy), px(sx), py(0), outline=p["preview_stock"], width=2)
+        canvas.create_text(px(sx / 2), py(sy) - 12, text=f"Stock {sx:g} x {sy:g} mm", fill=p["preview_text"])
         canvas.create_rectangle(
             px(layout["layout_min_x"]),
             py(layout["layout_max_y"]),
             px(layout["layout_max_x"]),
             py(layout["layout_min_y"]),
-            outline="#cc7a00",
+            outline=p["preview_bounds"],
             dash=(4, 2),
         )
         if settings.labels_enabled:
-            canvas.create_rectangle(px(gx), py(gy + grid_h + 12), px(gx + grid_w), py(gy + grid_h), outline="#d7a35d", dash=(3, 2))
-            canvas.create_rectangle(px(gx - 16), py(gy + grid_h), px(gx), py(gy), outline="#d7a35d", dash=(3, 2))
+            canvas.create_rectangle(px(gx), py(gy + grid_h + 12), px(gx + grid_w), py(gy + grid_h), outline=p["preview_label_zone"], dash=(3, 2))
+            canvas.create_rectangle(px(gx - 16), py(gy + grid_h), px(gx), py(gy), outline=p["preview_label_zone"], dash=(3, 2))
             if not compact:
-                canvas.create_text(px(gx + grid_w / 2), py(gy + grid_h + 8), text="POWER (%)", fill="#555")
-                canvas.create_text(px(max(2.5, gx - 13)), py(gy + grid_h / 2), text="SPEED", fill="#555", angle=90)
+                canvas.create_text(px(gx + grid_w / 2), py(gy + grid_h + 8), text="POWER (%)", fill=p["preview_text"])
+                canvas.create_text(px(max(2.5, gx - 13)), py(gy + grid_h / 2), text="SPEED", fill=p["preview_text"], angle=90)
 
         for r in range(rows):
             for col in range(cols):
                 x = gx + col * (tile + gap)
                 y = gy + r * (tile + gap)
-                canvas.create_rectangle(px(x), py(y + tile), px(x + tile), py(y), outline="#1f77b4", fill="#eef6ff", width=1)
+                canvas.create_rectangle(px(x), py(y + tile), px(x + tile), py(y), outline=p["preview_grid"], fill=p["preview_tile_fill"], width=1)
 
-        canvas.create_rectangle(px(gx), py(gy + grid_h), px(gx + grid_w), py(gy), outline="#0f4c81", width=2)
+        canvas.create_rectangle(px(gx), py(gy + grid_h), px(gx + grid_w), py(gy), outline=p["preview_grid"], width=2)
         if warnings:
-            canvas.create_text(cw - pad, ch - 10, text=f"{len(warnings)} warning(s)", fill="#9a3412", anchor="e")
+            canvas.create_text(cw - pad, ch - 10, text=f"{len(warnings)} warning(s)", fill=p["warning"], anchor="e")
         elif compact:
-            canvas.create_text(cw - pad, ch - 10, text=f"{rows} x {cols}", fill="#166534", anchor="e")
+            canvas.create_text(cw - pad, ch - 10, text=f"{rows} x {cols}", fill=p["success"], anchor="e")
 
     def _write_preview_summary(self, settings: GeneratorSettings, layout: Dict[str, float], warnings, speeds, powers):
         if not hasattr(self, "preview_text"):

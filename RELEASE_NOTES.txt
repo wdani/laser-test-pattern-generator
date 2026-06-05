@@ -1,7 +1,7 @@
-Laser Test Pattern Generator v1.5.0
+Laser Test Pattern Generator v1.6.0
 ===================================
 
-This release improves the GUI workflow and preview experience while keeping
+This release modernizes the GUI theme and numeric controls while keeping
 generated MKS and generic NC toolpath behavior unchanged.
 
 Highlights
@@ -12,6 +12,10 @@ Highlights
 - Generic .nc / G-code generation.
 - NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
 - Default generic NC profile is Makera (0-1).
+- Modernized Tkinter/ttk visual styling.
+- Light and Dark GUI theme selector with local preference persistence.
+- Improved numeric controls for common grid, stock, speed, power, laser, and
+  label settings. Manual typing still works.
 - Improved GUI layout with clearer grouping and workflow hints.
 - Right-side quick preview on wide windows, using the same layout logic as the
   Preview tab.
