@@ -165,7 +165,8 @@ Read [docs/SAFETY.md](docs/SAFETY.md).
 
 ## Roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md).
+See [docs/ROADMAP.md](docs/ROADMAP.md) and
+[docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## License
 
