@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import copy
@@ -62,7 +62,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--nc-power-profile", choices=list(NC_POWER_PROFILES), default=DEFAULT_NC_POWER_PROFILE, help="Generic NC laser power scale profile")
     p.add_argument("--nc-s-max", type=float, default=1.0, help="Custom NC S-value for 100 percent power; used when --nc-power-profile Custom")
     p.add_argument("--template-dir", type=Path, default=None)
-    p.add_argument("--api", choices=["app-info"], help="API commands")
+    p.add_argument("--api", choices=["app-info", "default-settings"], help="API commands")
     return p.parse_args(argv)
 
 
@@ -120,10 +120,35 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "app_version": "v1.6.0",
             "backend": "Python",
             "supported_output_formats": ["MKS", "NC", "Both"],
-            "available_api_commands": ["app-info"],
-            "planned_api_commands": ["default-settings", "preview", "generate"]
+            "available_api_commands": ["app-info", "default-settings"],
+            "planned_api_commands": ["preview", "generate"]
         }
         print(json.dumps(app_info, indent=2))
+        return 0
+
+    if args.api == "default-settings":
+        # Get default values from parser
+        defaults = parse_args([])
+        settings = settings_from_args(defaults)
+
+        default_settings = {
+            "schema_version": 1,
+            "api_command": "default-settings",
+            "app_name": "Laser Test Pattern Generator",
+            "output_format": settings.output_format,
+            "rows": settings.rows,
+            "cols": settings.cols,
+            "speed_min": settings.speed_min,
+            "speed_max": settings.speed_max,
+            "power_min": settings.power_min,
+            "power_max": settings.power_max,
+            "tile_size": settings.tile_size,
+            "gap": settings.gap,
+            "labels": settings.labels_enabled,
+            "nc_power_profile": settings.nc_power_profile,
+            "nc_s_max": settings.nc_s_max
+        }
+        print(json.dumps(default_settings, indent=2))
         return 0
 
     settings = settings_from_args(args)
