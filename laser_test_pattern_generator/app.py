@@ -62,6 +62,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--nc-power-profile", choices=list(NC_POWER_PROFILES), default=DEFAULT_NC_POWER_PROFILE, help="Generic NC laser power scale profile")
     p.add_argument("--nc-s-max", type=float, default=1.0, help="Custom NC S-value for 100 percent power; used when --nc-power-profile Custom")
     p.add_argument("--template-dir", type=Path, default=None)
+    p.add_argument("--api", choices=["app-info"], help="API commands")
     return p.parse_args(argv)
 
 
@@ -110,6 +111,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.gui:
         gui = GeneratorGui()
         gui.run()
+        return 0
+
+    if args.api == "app-info":
+        app_info = {
+            "schema_version": 1,
+            "app_name": "Laser Test Pattern Generator",
+            "app_version": "v1.6.0",
+            "backend": "Python",
+            "supported_output_formats": ["MKS", "NC", "Both"],
+            "available_api_commands": ["app-info"],
+            "planned_api_commands": ["default-settings", "preview", "generate"]
+        }
+        print(json.dumps(app_info, indent=2))
         return 0
 
     settings = settings_from_args(args)
