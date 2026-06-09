@@ -1,8 +1,9 @@
-﻿import json
+import json
 from contextlib import redirect_stdout
 from io import StringIO
 
 from laser_test_pattern_generator import app
+from laser_test_pattern_generator.settings import APP_VERSION
 
 
 def run_app_info() -> dict:
@@ -20,7 +21,12 @@ def test_app_info_returns_expected_metadata():
 
     assert data["schema_version"] == 1
     assert data["app_name"] == "Laser Test Pattern Generator"
+    assert data["app_version"] == APP_VERSION
     assert data["backend"] == "Python"
+
+
+def test_app_info_helper_matches_main_response():
+    assert run_app_info() == app.app_info_response()
 
 
 def test_app_info_lists_supported_output_formats():

@@ -1,8 +1,9 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import copy
 import json
+from dataclasses import fields
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -10,11 +11,17 @@ from .generator_mks import generate_mks
 from .generator_nc import generate_generic_nc, resolve_nc_s_max
 from .gui import GeneratorGui
 from .settings import (
+    APP_VERSION,
     DEFAULT_NC_POWER_PROFILE,
     GeneratorSettings,
     LASER_MODES,
     NC_POWER_PROFILES,
 )
+
+API_SCHEMA_VERSION = 1
+APP_NAME = "Laser Test Pattern Generator"
+AVAILABLE_API_COMMANDS = ["app-info", "default-settings"]
+PLANNED_API_COMMANDS = ["preview", "generate"]
 
 
 def positive_int(value: str) -> int:
@@ -106,6 +113,44 @@ def settings_from_args(args: argparse.Namespace) -> GeneratorSettings:
     )
 
 
+def api_json_value(value):
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, tuple):
+        return [api_json_value(item) for item in value]
+    if isinstance(value, list):
+        return [api_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): api_json_value(item) for key, item in value.items()}
+    return value
+
+
+def app_info_response() -> dict:
+    return {
+        "schema_version": API_SCHEMA_VERSION,
+        "app_name": APP_NAME,
+        "app_version": APP_VERSION,
+        "backend": "Python",
+        "supported_output_formats": ["MKS", "NC", "Both"],
+        "available_api_commands": AVAILABLE_API_COMMANDS,
+        "planned_api_commands": PLANNED_API_COMMANDS,
+    }
+
+
+def settings_to_api_defaults(settings: GeneratorSettings) -> dict:
+    data = {
+        "schema_version": API_SCHEMA_VERSION,
+        "api_command": "default-settings",
+        "app_name": APP_NAME,
+        "app_version": APP_VERSION,
+    }
+
+    for field_info in fields(GeneratorSettings):
+        data[field_info.name] = api_json_value(getattr(settings, field_info.name))
+
+    return data
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
     if args.gui:
@@ -114,41 +159,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     if args.api == "app-info":
-        app_info = {
-            "schema_version": 1,
-            "app_name": "Laser Test Pattern Generator",
-            "app_version": "v1.6.0",
-            "backend": "Python",
-            "supported_output_formats": ["MKS", "NC", "Both"],
-            "available_api_commands": ["app-info", "default-settings"],
-            "planned_api_commands": ["preview", "generate"]
-        }
-        print(json.dumps(app_info, indent=2))
+        print(json.dumps(app_info_response(), indent=2))
         return 0
 
     if args.api == "default-settings":
-        # Get default values from parser
-        defaults = parse_args([])
-        settings = settings_from_args(defaults)
-
-        default_settings = {
-            "schema_version": 1,
-            "api_command": "default-settings",
-            "app_name": "Laser Test Pattern Generator",
-            "output_format": settings.output_format,
-            "rows": settings.rows,
-            "cols": settings.cols,
-            "speed_min": settings.speed_min,
-            "speed_max": settings.speed_max,
-            "power_min": settings.power_min,
-            "power_max": settings.power_max,
-            "tile_size": settings.tile_size,
-            "gap": settings.gap,
-            "labels": settings.labels_enabled,
-            "nc_power_profile": settings.nc_power_profile,
-            "nc_s_max": settings.nc_s_max
-        }
-        print(json.dumps(default_settings, indent=2))
+        settings = settings_from_args(parse_args([]))
+        print(json.dumps(settings_to_api_defaults(settings), indent=2))
         return 0
 
     settings = settings_from_args(args)
