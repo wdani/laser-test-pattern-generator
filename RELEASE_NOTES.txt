@@ -1,8 +1,8 @@
-Laser Test Pattern Generator v1.6.2
+Laser Test Pattern Generator v1.6.3
 ===================================
 
-This release completes the JSON CLI API backend contract for the stable
-Python/Tkinter v1.x line.
+This release adds JSON API config-file workflow support and a privacy-friendly
+GitHub Releases update check for the stable Python/Tkinter v1.x line.
 
 The generated MKS and generic NC toolpath behavior is unchanged.
 
@@ -14,25 +14,29 @@ Highlights
 - Generic .nc / G-code generation.
 - NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
 - Default generic NC profile is Makera (0-1).
-- Completed JSON CLI API command set for future UI/frontend work:
+- JSON CLI API command set:
   - python makera_material_test_generator.py --api app-info
   - python makera_material_test_generator.py --api default-settings
   - python makera_material_test_generator.py --api preview
   - python makera_material_test_generator.py --api generate
-- app-info reports release metadata, supported output formats, and the
-  available API commands.
-- default-settings reports the full default GeneratorSettings values as valid
-  JSON so frontends do not need to duplicate Python defaults.
-- preview is read-only and reports planned layout metadata without writing
-  generated files.
-- generate writes the requested output file(s) using the existing MKS/NC
-  generator functions and returns clean JSON only.
+- JSON config-file support for API preview/generate workflows:
+  - python makera_material_test_generator.py --api preview --config examples/api/preview_basic.json
+  - python makera_material_test_generator.py --api generate --config examples/api/generate_nc_basic.json
+- Example API configs are included under examples/api/ for preview, generic NC
+  generation, and combined MKS/NC generation.
+- CLI arguments override JSON config values, so automation can use shared
+  config files while still changing one-off settings.
 - Developer API documentation is available in docs/JSON_API.md for future
-  frontend work.
-- Python core settings and the JSON CLI API remain the source of truth.
+  automation, frontend, local tooling, and companion-tool work.
+- Manual GUI update check from Help -> Check for updates.
+- Optional startup update checks are available but disabled by default.
+- Startup checks run at most once per day when enabled.
+- The update dialog shows the current version, latest version, and a direct
+  link to the latest GitHub Release.
+- Update notifications support remind tomorrow, remind in 10 days, remind in
+  30 days, ignore this version, and disable update checks.
+- The update check does not auto-download or auto-install anything.
 - No major Tkinter UI rewrite is included in this release.
-- Future larger UI work is still planned for Tauri v2.0, while v1.x remains
-  the stable Python/Tkinter version.
 
 Existing v1.x Features
 ----------------------
@@ -76,6 +80,9 @@ Notes
 
 - Windows executable builds remain experimental.
 - No third-party Python packages are required.
+- Python core settings and the JSON CLI API remain the source of truth.
+- v1.x remains the stable Python/Tkinter version.
+- Future larger UI work is still planned for Tauri v2.0.
 - The right-side preview is approximate and does not replace verification in
   Makera Studio or an NC sender/viewer.
 - Makera profile maps 20% power to S0.2 and 40% power to S0.4.

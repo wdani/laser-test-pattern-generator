@@ -8,7 +8,7 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 ## Current Release
 
-The current release is **v1.6.2**.
+The current release is **v1.6.3**.
 
 This is a cross-platform Python/Tkinter tool. The included `.bat` file and
 experimental `.exe` builds are Windows-only convenience launchers; the generator
@@ -24,16 +24,18 @@ itself runs from Python on Windows, Linux, and macOS.
 - Laser modes: Line, Fill, and Offset Fill.
 - Generic NC power profiles for Makera, GRBL, 8-bit, and custom S-value scales.
 - Metadata comments in generated generic `.nc` files for easier verification.
-- JSON CLI backend API for future UI/frontend work:
+- JSON CLI backend API for future automation, tooling, and UI/frontend work:
   `--api app-info`, `--api default-settings`, `--api preview`, and
   `--api generate`.
+- JSON config-file workflow for API preview/generate commands, with example
+  configs under `examples/api/`.
 - English GUI.
 - Improved GUI layout with a right-side quick preview on wide windows.
 - Modernized Tkinter/ttk visual theme with Light and Dark modes.
 - Improved numeric controls for common grid, stock, speed, power, and laser
   settings while still allowing manual typing.
-- Privacy-friendly GUI update check via GitHub Releases. Startup checks are
-  optional and disabled by default.
+- Privacy-friendly GUI update check via GitHub Releases, with optional startup
+  checks disabled by default plus snooze and ignore-version behavior.
 - Generated labels selectable between English and German.
 - Preset manager with JSON presets, metadata, import/export, and optional
   reference image paths.
