@@ -9,6 +9,7 @@ from typing import Optional, Sequence
 
 from .generator_mks import generate_mks
 from .generator_nc import generate_generic_nc, resolve_nc_s_max
+from .geometry import computed_layout, linspace, validate_layout
 from .gui import GeneratorGui
 from .settings import (
     APP_VERSION,
@@ -20,8 +21,8 @@ from .settings import (
 
 API_SCHEMA_VERSION = 1
 APP_NAME = "Laser Test Pattern Generator"
-AVAILABLE_API_COMMANDS = ["app-info", "default-settings"]
-PLANNED_API_COMMANDS = ["preview", "generate"]
+AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview"]
+PLANNED_API_COMMANDS = ["generate"]
 
 
 def positive_int(value: str) -> int:
@@ -69,7 +70,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--nc-power-profile", choices=list(NC_POWER_PROFILES), default=DEFAULT_NC_POWER_PROFILE, help="Generic NC laser power scale profile")
     p.add_argument("--nc-s-max", type=float, default=1.0, help="Custom NC S-value for 100 percent power; used when --nc-power-profile Custom")
     p.add_argument("--template-dir", type=Path, default=None)
-    p.add_argument("--api", choices=["app-info", "default-settings"], help="API commands")
+    p.add_argument("--api", choices=AVAILABLE_API_COMMANDS, help="API commands")
     return p.parse_args(argv)
 
 
@@ -151,6 +152,71 @@ def settings_to_api_defaults(settings: GeneratorSettings) -> dict:
     return data
 
 
+def rounded_axis_values(start: float, end: float, count: int, should_round: bool) -> list:
+    values = linspace(start, end, count)
+    if should_round:
+        return [int(round(value)) for value in values]
+    return [round(value, 6) for value in values]
+
+
+def preview_response(settings: GeneratorSettings) -> dict:
+    preview_settings = copy.deepcopy(settings)
+    rows = int(preview_settings.rows)
+    cols = int(preview_settings.cols)
+
+    speeds = rounded_axis_values(
+        preview_settings.speed_min,
+        preview_settings.speed_max,
+        rows,
+        preview_settings.round_speed_values,
+    )
+    powers = rounded_axis_values(
+        preview_settings.power_min,
+        preview_settings.power_max,
+        cols,
+        preview_settings.round_power_values,
+    )
+
+    layout = computed_layout(preview_settings)
+
+    return {
+        "schema_version": API_SCHEMA_VERSION,
+        "api_command": "preview",
+        "app_name": APP_NAME,
+        "app_version": APP_VERSION,
+        "output_format": preview_settings.output_format,
+        "rows": rows,
+        "cols": cols,
+        "tile_count": rows * cols,
+        "tile_size": preview_settings.tile_size,
+        "gap": preview_settings.gap,
+        "grid_x": preview_settings.grid_x,
+        "grid_y": preview_settings.grid_y,
+        "auto_position": preview_settings.auto_position,
+        "grid_width": layout["grid_w"],
+        "grid_height": layout["grid_h"],
+        "stock_x": preview_settings.stock_x,
+        "stock_y": preview_settings.stock_y,
+        "stock_z": preview_settings.stock_z,
+        "labels_enabled": preview_settings.labels_enabled,
+        "language": preview_settings.language,
+        "tile_mode_name": preview_settings.tile_mode_name,
+        "line_interval": preview_settings.line_interval,
+        "passes": preview_settings.passes,
+        "bidirectional": preview_settings.bidirectional,
+        "scan_angle": preview_settings.scan_angle,
+        "speeds_visual_top_to_bottom": list(reversed(speeds)),
+        "powers_left_to_right": powers,
+        "approx_bounds": {
+            "min_x": layout["layout_min_x"],
+            "max_x": layout["layout_max_x"],
+            "min_y": layout["layout_min_y"],
+            "max_y": layout["layout_max_y"],
+        },
+        "warnings": validate_layout(preview_settings),
+    }
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
     if args.gui:
@@ -165,6 +231,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.api == "default-settings":
         settings = settings_from_args(parse_args([]))
         print(json.dumps(settings_to_api_defaults(settings), indent=2))
+        return 0
+
+    if args.api == "preview":
+        settings = settings_from_args(args)
+        print(json.dumps(preview_response(settings), indent=2))
         return 0
 
     settings = settings_from_args(args)
