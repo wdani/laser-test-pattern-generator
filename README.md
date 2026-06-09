@@ -24,8 +24,9 @@ itself runs from Python on Windows, Linux, and macOS.
 - Laser modes: Line, Fill, and Offset Fill.
 - Generic NC power profiles for Makera, GRBL, 8-bit, and custom S-value scales.
 - Metadata comments in generated generic `.nc` files for easier verification.
-- JSON CLI backend groundwork for future UI/frontend work:
-  `--api app-info` and `--api default-settings`.
+- JSON CLI backend API for future UI/frontend work:
+  `--api app-info`, `--api default-settings`, `--api preview`, and
+  `--api generate`.
 - English GUI.
 - Improved GUI layout with a right-side quick preview on wide windows.
 - Modernized Tkinter/ttk visual theme with Light and Dark modes.
@@ -148,7 +149,7 @@ python makera_material_test_generator.py --format MKS --language Deutsch --outpu
 - `start_gui_windows.bat` - Windows convenience launcher.
 - `templates/` - Makera Studio template projects used by `.mks` generation.
 - `presets/` - compatible JSON presets for the GUI.
-- `docs/` - safety notes and roadmap.
+- `docs/` - safety notes, API documentation, presets, and roadmap.
 
 Generated scratch outputs should stay outside the repository or in ignored output
 folders.
@@ -191,7 +192,8 @@ Read [docs/SAFETY.md](docs/SAFETY.md).
 
 ## Roadmap
 
-See [docs/PRESETS.md](docs/PRESETS.md),
+See [docs/JSON_API.md](docs/JSON_API.md),
+[docs/PRESETS.md](docs/PRESETS.md),
 [docs/ROADMAP.md](docs/ROADMAP.md), and
 [docs/VERSIONING.md](docs/VERSIONING.md).
 
