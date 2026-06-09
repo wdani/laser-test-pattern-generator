@@ -1,7 +1,5 @@
 from datetime import date
 
-import pytest
-
 from laser_test_pattern_generator.update_check import (
     UpdateCheckResult,
     compare_versions,
@@ -53,8 +51,11 @@ def test_parse_latest_release_response():
 
 
 def test_parse_latest_release_response_rejects_invalid_payload():
-    with pytest.raises(ValueError):
+    try:
         parse_latest_release_response({"name": "v1.6.3"})
+    except ValueError:
+        return
+    raise AssertionError("Expected ValueError")
 
 
 def test_ignored_version_detection():
@@ -127,4 +128,3 @@ def test_snooze_until_30_days():
 
     assert not should_check_for_updates(prefs, date(2026, 7, 8))
     assert should_check_for_updates(prefs, date(2026, 7, 9))
-
