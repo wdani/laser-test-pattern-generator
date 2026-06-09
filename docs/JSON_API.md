@@ -178,8 +178,14 @@ Overwrite behavior:
 - With `--overwrite`, the requested output path may be overwritten.
 - Without `--overwrite`, existing output paths are not overwritten; the existing
   output path resolver chooses a unique filename.
-- `--format Both` uses the existing output-path behavior to create matching
-  `.mks` and `.nc` outputs.
+- `--format Both` runs the existing MKS and NC generators, and each generated
+  file uses its existing independent output path resolution.
+- Do not assume that `--format Both` always creates matching `.mks` and `.nc`
+  filename stems. When `--overwrite` is not used and filename collisions exist,
+  each generator may resolve to a different unique output path.
+- The returned JSON `output` values are authoritative. Frontends must read the
+  actual generated paths from `result.output` or each entry in the `results`
+  array instead of deriving companion paths.
 
 JSON shape for one output format:
 
@@ -228,6 +234,8 @@ Intended frontend usage:
 - Trigger generation only after the user confirms settings.
 - Treat this command as the only JSON API command that writes files.
 - Surface generated output paths and warnings to the user.
+- Read generated paths from the returned `result` or `results` data. Do not
+  infer an NC path from an MKS path, or an MKS path from an NC path.
 - Preserve backend overwrite behavior instead of implementing a separate
   frontend overwrite policy.
 
