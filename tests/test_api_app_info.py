@@ -43,5 +43,6 @@ def test_app_info_lists_available_and_planned_api_commands():
     assert "app-info" in data["available_api_commands"]
 
     assert "default-settings" in data["available_api_commands"]
-    assert "preview" in data["planned_api_commands"]
+    assert "preview" in data["available_api_commands"]
+    assert "preview" not in data["planned_api_commands"]
     assert "generate" in data["planned_api_commands"]
