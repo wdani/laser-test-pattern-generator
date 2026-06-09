@@ -32,6 +32,8 @@ itself runs from Python on Windows, Linux, and macOS.
 - Modernized Tkinter/ttk visual theme with Light and Dark modes.
 - Improved numeric controls for common grid, stock, speed, power, and laser
   settings while still allowing manual typing.
+- Privacy-friendly GUI update check via GitHub Releases. Startup checks are
+  optional and disabled by default.
 - Generated labels selectable between English and German.
 - Preset manager with JSON presets, metadata, import/export, and optional
   reference image paths.
@@ -71,6 +73,12 @@ python makera_material_test_generator.py --gui
 
 Tkinter is required. It is part of the Python standard library on many installs;
 on some Linux distributions it is packaged separately as `python3-tk`.
+
+## Update Checks
+
+The GUI can manually check GitHub Releases from **Help -> Check for updates**.
+Startup update checks are optional, disabled by default, and run at most once per
+day when enabled. The check never downloads or installs updates automatically.
 
 ## Windows Executable Builds
 

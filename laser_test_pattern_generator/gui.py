@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import threading
+import webbrowser
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -35,6 +37,13 @@ from .settings import (
     GeneratorSettings,
     LASER_MODES,
     NC_POWER_PROFILES,
+)
+from .update_check import (
+    check_for_update,
+    date_text,
+    should_check_for_updates,
+    should_notify_update,
+    snooze_until,
 )
 from .ui_settings import THEME_CHOICES, load_ui_settings, normalize_theme_name, save_ui_settings
 
@@ -163,17 +172,21 @@ class GeneratorGui:
         self.root.geometry("1280x820")
         self.root.minsize(980, 700)
         self.style = ttk.Style(self.root)
-        self.theme_name = normalize_theme_name(load_ui_settings().get("theme"))
+        self.ui_settings = load_ui_settings()
+        self.theme_name = normalize_theme_name(self.ui_settings.get("theme"))
         self.palette = THEME_PALETTES[self.theme_name]
         self.vars: Dict[str, tk.Variable] = {}
         self.preset_names_var = tk.StringVar(value="")
         self._preview_after_id: Optional[str] = None
         self._side_preview_visible = True
+        self._update_check_running = False
         self._apply_theme(self.theme_name)
+        self._build_menu()
         self._build()
         self._refresh_presets()
         self._bind_auto_preview_updates()
         self._schedule_preview_refresh()
+        self.root.after(1200, self._check_for_updates_on_startup)
 
     def _var(self, name: str, default, cls=tk.StringVar):
         v = cls(value=default)
@@ -264,6 +277,7 @@ class GeneratorGui:
         self.palette = THEME_PALETTES[self.theme_name]
         if persist:
             try:
+                self.ui_settings["theme"] = self.theme_name
                 save_ui_settings({"theme": self.theme_name})
             except Exception as exc:
                 if hasattr(self, "status"):
@@ -366,6 +380,149 @@ class GeneratorGui:
         self._apply_theme(theme, persist=True)
         self._log(f"Theme set to {theme}.")
 
+    def _save_ui_preference_updates(self, updates: Dict[str, object]) -> None:
+        try:
+            self.ui_settings.update(updates)
+            self.ui_settings = load_ui_settings(save_ui_settings(self.ui_settings))
+        except Exception as exc:
+            self._log("WARNING: Could not save UI setting: " + str(exc))
+
+    def _on_update_startup_changed(self) -> None:
+        enabled = bool(self.vars["update_check_on_startup"].get())
+        self._save_ui_preference_updates({"update_check_on_startup": enabled})
+        if enabled:
+            self._log("Startup update checks enabled. The app checks GitHub Releases at most once per day.")
+        else:
+            self._log("Startup update checks disabled.")
+
+    def _manual_update_check(self) -> None:
+        self._run_update_check(manual=True)
+
+    def _check_for_updates_on_startup(self) -> None:
+        self.ui_settings = load_ui_settings()
+        if "update_check_on_startup" in self.vars:
+            self.vars["update_check_on_startup"].set(bool(self.ui_settings.get("update_check_on_startup", False)))
+
+        if not should_check_for_updates(self.ui_settings):
+            return
+
+        self._save_ui_preference_updates({"update_last_checked": date_text()})
+        self._run_update_check(manual=False)
+
+    def _run_update_check(self, manual: bool) -> None:
+        if self._update_check_running:
+            if manual:
+                self._log("Update check already running.")
+            return
+
+        self._update_check_running = True
+        if manual:
+            self._log("Checking GitHub Releases for updates...")
+
+        def worker() -> None:
+            result = check_for_update(APP_VERSION)
+            try:
+                self.root.after(0, lambda: self._finish_update_check(result, manual))
+            except Exception:
+                pass
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finish_update_check(self, result, manual: bool) -> None:
+        self._update_check_running = False
+        if manual:
+            self._save_ui_preference_updates({"update_last_checked": date_text()})
+
+        if result.error:
+            if manual:
+                messagebox.showwarning("Update check", "Could not check GitHub Releases.\n\n" + result.error)
+            else:
+                self._log("Update check warning: " + result.error)
+            return
+
+        if result.is_update_available:
+            if manual or should_notify_update(result, self.ui_settings):
+                self._show_update_available_dialog(result)
+            return
+
+        if manual:
+            self._show_update_status_dialog(result, "The app is up to date.")
+
+    def _show_update_status_dialog(self, result, status_text: str) -> None:
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Update check")
+        dialog.transient(self.root)
+        dialog.resizable(False, False)
+        frame = ttk.Frame(dialog, padding=14)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(frame, text=status_text, font=("Segoe UI", 10, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
+        ttk.Label(frame, text="Current version").grid(row=1, column=0, sticky="w", padx=(0, 10), pady=3)
+        ttk.Label(frame, text=result.current_version).grid(row=1, column=1, sticky="w", pady=3)
+        ttk.Label(frame, text="Latest version").grid(row=2, column=0, sticky="w", padx=(0, 10), pady=3)
+        ttk.Label(frame, text=result.latest_tag or result.latest_version or "Unknown").grid(row=2, column=1, sticky="w", pady=3)
+
+        buttons = ttk.Frame(frame)
+        buttons.grid(row=3, column=0, columnspan=2, sticky="e", pady=(14, 0))
+        ttk.Button(buttons, text="Open latest release", command=lambda: webbrowser.open(result.release_url)).pack(side="left", padx=(0, 8))
+        ttk.Button(buttons, text="Close", command=dialog.destroy).pack(side="left")
+        dialog.grab_set()
+
+    def _show_update_available_dialog(self, result) -> None:
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Update available")
+        dialog.transient(self.root)
+        dialog.resizable(False, False)
+        frame = ttk.Frame(dialog, padding=14)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(frame, text="A newer version is available.", font=("Segoe UI", 10, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 10))
+        ttk.Label(frame, text="Current version").grid(row=1, column=0, sticky="w", padx=(0, 10), pady=3)
+        ttk.Label(frame, text=result.current_version).grid(row=1, column=1, columnspan=2, sticky="w", pady=3)
+        ttk.Label(frame, text="Latest version").grid(row=2, column=0, sticky="w", padx=(0, 10), pady=3)
+        ttk.Label(frame, text=result.latest_tag or result.latest_version or "Unknown").grid(row=2, column=1, columnspan=2, sticky="w", pady=3)
+        ttk.Label(
+            frame,
+            text="No files are downloaded or installed automatically.",
+            style="Hint.TLabel",
+            wraplength=440,
+        ).grid(row=3, column=0, columnspan=3, sticky="w", pady=(8, 12))
+
+        ttk.Button(frame, text="Open latest release", command=lambda: webbrowser.open(result.release_url)).grid(row=4, column=0, sticky="w", pady=4)
+        ttk.Button(frame, text="Remind tomorrow", command=lambda: self._snooze_update(dialog, 1)).grid(row=4, column=1, sticky="we", padx=6, pady=4)
+        ttk.Button(frame, text="Remind in 10 days", command=lambda: self._snooze_update(dialog, 10)).grid(row=4, column=2, sticky="we", pady=4)
+        ttk.Button(frame, text="Remind in 30 days", command=lambda: self._snooze_update(dialog, 30)).grid(row=5, column=1, sticky="we", padx=6, pady=4)
+        ttk.Button(frame, text="Ignore this version", command=lambda: self._ignore_update_version(dialog, result)).grid(row=5, column=2, sticky="we", pady=4)
+        ttk.Button(frame, text="Disable update checks", command=lambda: self._disable_update_checks(dialog)).grid(row=6, column=1, sticky="we", padx=6, pady=(8, 0))
+        ttk.Button(frame, text="Close", command=dialog.destroy).grid(row=6, column=2, sticky="we", pady=(8, 0))
+        dialog.grab_set()
+
+    def _snooze_update(self, dialog, days: int) -> None:
+        until = snooze_until(days)
+        self._save_ui_preference_updates({"update_snooze_until": until})
+        self._log(f"Update reminder snoozed until {until}.")
+        dialog.destroy()
+
+    def _ignore_update_version(self, dialog, result) -> None:
+        version = result.latest_tag or result.latest_version or ""
+        self._save_ui_preference_updates({"update_ignored_version": version})
+        self._log(f"Ignoring update version {version}.")
+        dialog.destroy()
+
+    def _disable_update_checks(self, dialog) -> None:
+        if "update_check_on_startup" in self.vars:
+            self.vars["update_check_on_startup"].set(False)
+        self._save_ui_preference_updates({"update_check_on_startup": False})
+        self._log("Startup update checks disabled.")
+        dialog.destroy()
+
+    def _build_menu(self) -> None:
+        menubar = tk.Menu(self.root)
+        help_menu = tk.Menu(menubar, tearoff=False)
+        help_menu.add_command(label="Check for updates", command=self._manual_update_check)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        self.root.config(menu=menubar)
+
     def _build(self):
         main = ttk.Frame(self.root, padding=10)
         main.pack(fill="both", expand=True)
@@ -404,6 +561,20 @@ class GeneratorGui:
         theme_combo.grid(row=2, column=5, sticky="w", padx=6, pady=(0, 6))
         theme_combo.bind("<<ComboboxSelected>>", self._on_theme_changed)
         self._tooltip(theme_combo, "Switch between Light and Dark UI themes. The choice is saved locally.")
+        self.vars["update_check_on_startup"] = tk.BooleanVar(value=bool(self.ui_settings.get("update_check_on_startup", False)))
+        update_check = ttk.Checkbutton(
+            output,
+            text="Check for updates on startup",
+            variable=self.vars["update_check_on_startup"],
+            command=self._on_update_startup_changed,
+        )
+        update_check.grid(row=3, column=0, sticky="w", padx=6, pady=(0, 6))
+        self._tooltip(update_check, "Optional. Contacts GitHub Releases at most once per day and never downloads or installs anything.")
+        ttk.Label(
+            output,
+            text="Manual checks are available from Help -> Check for updates.",
+            style="Hint.TLabel",
+        ).grid(row=3, column=1, columnspan=5, sticky="w", padx=6, pady=(0, 6))
         output.columnconfigure(0, weight=1)
 
         safety = ttk.Label(
@@ -748,7 +919,7 @@ class GeneratorGui:
     def _collect_preset_data(self) -> Dict[str, object]:
         data: Dict[str, object] = {}
         for key, var in self.vars.items():
-            if key in ("preset_name", "ui_theme"):
+            if key in ("preset_name", "ui_theme", "update_check_on_startup"):
                 continue
             try:
                 data[key] = var.get()
@@ -764,7 +935,7 @@ class GeneratorGui:
         for key, value in data.items():
             if key.startswith("_"):
                 continue
-            if key == "ui_theme":
+            if key in ("ui_theme", "update_check_on_startup"):
                 continue
             if key in self.vars:
                 try:
