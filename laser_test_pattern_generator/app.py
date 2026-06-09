@@ -21,8 +21,8 @@ from .settings import (
 
 API_SCHEMA_VERSION = 1
 APP_NAME = "Laser Test Pattern Generator"
-AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview"]
-PLANNED_API_COMMANDS = ["generate"]
+AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview", "generate"]
+PLANNED_API_COMMANDS = []
 
 
 def positive_int(value: str) -> int:
@@ -217,6 +217,32 @@ def preview_response(settings: GeneratorSettings) -> dict:
     }
 
 
+def generate_output_infos(settings: GeneratorSettings) -> list:
+    infos = []
+    if settings.output_format in ("MKS", "Both"):
+        infos.append(generate_mks(copy.deepcopy(settings)))
+    if settings.output_format in ("NC", "Both"):
+        infos.append(generate_generic_nc(copy.deepcopy(settings)))
+    return infos
+
+
+def generate_response(settings: GeneratorSettings) -> dict:
+    infos = generate_output_infos(settings)
+    data = {
+        "schema_version": API_SCHEMA_VERSION,
+        "api_command": "generate",
+        "app_name": APP_NAME,
+        "app_version": APP_VERSION,
+    }
+
+    if len(infos) == 1:
+        data["result"] = api_json_value(infos[0])
+    else:
+        data["results"] = api_json_value(infos)
+
+    return data
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
     if args.gui:
@@ -238,12 +264,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(json.dumps(preview_response(settings), indent=2))
         return 0
 
+    if args.api == "generate":
+        settings = settings_from_args(args)
+        print(json.dumps(generate_response(settings), indent=2, ensure_ascii=False))
+        return 0
+
     settings = settings_from_args(args)
-    infos = []
-    if settings.output_format in ("MKS", "Both"):
-        infos.append(generate_mks(copy.deepcopy(settings)))
-    if settings.output_format in ("NC", "Both"):
-        infos.append(generate_generic_nc(copy.deepcopy(settings)))
+    infos = generate_output_infos(settings)
 
     print(json.dumps(infos if len(infos) > 1 else infos[0], indent=2, ensure_ascii=False))
     print("\nFor MKS: open in Makera Studio, click Recalculate, inspect Preview, then export.")
