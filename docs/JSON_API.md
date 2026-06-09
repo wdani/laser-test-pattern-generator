@@ -28,6 +28,49 @@ normal command-line workflow.
 | `preview` | No | Calculate a read-only layout preview from CLI settings. |
 | `generate` | Yes | Generate MKS/NC output files and return machine-readable results. |
 
+## JSON Config Files
+
+`preview` and `generate` can load settings from a JSON config file:
+
+```bash
+python makera_material_test_generator.py --api preview --config examples/api/preview_basic.json
+```
+
+```bash
+python makera_material_test_generator.py --api generate --config examples/api/generate_nc_basic.json --overwrite
+```
+
+Config files use snake_case keys matching the `default-settings` response where
+possible, for example `output_format`, `output_path`, `rows`, `cols`,
+`speed_min`, `power_max`, `labels_enabled`, `tile_mode_name`, and
+`nc_power_profile`.
+
+Precedence is:
+
+1. Built-in Python defaults.
+2. JSON config values.
+3. Explicit CLI arguments.
+
+That means a frontend or script can keep common settings in JSON and override a
+single value on the command line:
+
+```bash
+python makera_material_test_generator.py --api preview --config examples/api/preview_basic.json --rows 4
+```
+
+Boolean config keys use the positive setting names, such as
+`labels_enabled: false`, `auto_position: true`, `round_speed_values: false`, or
+`overwrite_existing: true`.
+
+Invalid config files return a non-zero exit code, write a useful error to
+stderr, and do not print partial JSON to stdout.
+
+Included examples:
+
+- `examples/api/preview_basic.json`
+- `examples/api/generate_nc_basic.json`
+- `examples/api/generate_both_basic.json`
+
 ## app-info
 
 Example:
@@ -112,6 +155,12 @@ Example:
 python makera_material_test_generator.py --api preview --rows 2 --cols 3 --speed-min 1000 --speed-max 2000 --power-min 10 --power-max 30
 ```
 
+Example with config:
+
+```bash
+python makera_material_test_generator.py --api preview --config examples/api/preview_basic.json
+```
+
 Writes files: No.
 
 Purpose:
@@ -162,6 +211,12 @@ Example for both outputs:
 
 ```bash
 python makera_material_test_generator.py --api generate --format Both --output material_test.mks --overwrite
+```
+
+Example with config:
+
+```bash
+python makera_material_test_generator.py --api generate --config examples/api/generate_nc_basic.json --overwrite
 ```
 
 Writes files: Yes.

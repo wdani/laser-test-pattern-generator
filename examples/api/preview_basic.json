@@ -1,0 +1,17 @@
+{
+  "output_format": "NC",
+  "rows": 2,
+  "cols": 3,
+  "speed_min": 1000,
+  "speed_max": 1800,
+  "power_min": 10,
+  "power_max": 30,
+  "tile_size": 5,
+  "gap": 1,
+  "stock_x": 80,
+  "stock_y": 60,
+  "stock_z": 20,
+  "labels_enabled": false,
+  "tile_mode_name": "Line",
+  "nc_power_profile": "Makera (0-1)"
+}
