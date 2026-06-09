@@ -13,7 +13,9 @@ makera_material_test_generated*.nc
 generated/
 output/
 outputs/
-examples/
+examples/*
+!examples/api/
+!examples/api/*.json
 tmp/
 config/ui_settings.json
 *.tmp

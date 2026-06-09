@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import sys
 from dataclasses import fields
 from pathlib import Path
 from typing import Optional, Sequence
@@ -23,6 +24,59 @@ API_SCHEMA_VERSION = 1
 APP_NAME = "Laser Test Pattern Generator"
 AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview", "generate"]
 PLANNED_API_COMMANDS = []
+CONFIG_API_COMMANDS = {"preview", "generate"}
+
+CONFIG_SCALAR_OPTIONS = {
+    "output_path": "--output",
+    "output": "--output",
+    "output_format": "--format",
+    "format": "--format",
+    "material_name": "--material-name",
+    "rows": "--rows",
+    "cols": "--cols",
+    "speed_min": "--speed-min",
+    "speed_max": "--speed-max",
+    "power_min": "--power-min",
+    "power_max": "--power-max",
+    "tile_size": "--tile-size",
+    "gap": "--gap",
+    "grid_x": "--grid-x",
+    "grid_y": "--grid-y",
+    "tile_mode_name": "--mode",
+    "mode": "--mode",
+    "line_interval": "--line-interval",
+    "passes": "--passes",
+    "scan_angle": "--scan-angle",
+    "language": "--language",
+    "label_speed": "--label-speed",
+    "label_power": "--label-power",
+    "label_mode_name": "--label-mode",
+    "label_mode": "--label-mode",
+    "label_thickness": "--label-thickness",
+    "stock_x": "--stock-x",
+    "stock_y": "--stock-y",
+    "stock_z": "--stock-z",
+    "nc_power_profile": "--nc-power-profile",
+    "nc_s_max": "--nc-s-max",
+    "template_dir": "--template-dir",
+}
+
+CONFIG_BOOLEAN_OPTIONS = {
+    "overwrite_existing": ("--overwrite", "--no-overwrite"),
+    "overwrite": ("--overwrite", "--no-overwrite"),
+    "auto_filename": ("--auto-filename", "--no-auto-filename"),
+    "auto_position": ("--auto-position", "--no-auto-position"),
+    "bidirectional": ("--bidirectional", "--no-bidirectional"),
+    "labels_enabled": ("--labels", "--no-labels"),
+    "labels": ("--labels", "--no-labels"),
+    "round_speed_values": ("--round-speed", "--no-round-speed"),
+    "round_power_values": ("--round-power", "--no-round-power"),
+    "nc_include_labels": ("--nc-include-labels", "--no-nc-include-labels"),
+}
+
+
+class ConfigError(ValueError):
+    pass
 
 
 def positive_int(value: str) -> int:
@@ -36,8 +90,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate Makera Studio .mks material-test projects.")
     p.add_argument("--gui", action="store_true", help="Open the Tkinter GUI")
     p.add_argument("--output", type=Path, default=Path("makera_material_test_generated.mks"))
-    p.add_argument("--overwrite", action="store_true", help="Overwrite the output file if it already exists")
-    p.add_argument("--auto-filename", action="store_true", help="Generate filename from material and test settings")
+    p.add_argument("--overwrite", dest="overwrite", action="store_true", help="Overwrite the output file if it already exists")
+    p.add_argument("--no-overwrite", dest="overwrite", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--auto-filename", dest="auto_filename", action="store_true", help="Generate filename from material and test settings")
+    p.add_argument("--no-auto-filename", dest="auto_filename", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--material-name", default="material", help="Material name used for auto filenames")
     p.add_argument("--format", choices=["MKS", "NC", "Both"], default="MKS", help="Output format")
     p.add_argument("--rows", type=positive_int, default=6)
@@ -50,14 +106,17 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--gap", type=float, default=2.0)
     p.add_argument("--grid-x", type=float, default=18.0)
     p.add_argument("--grid-y", type=float, default=8.0)
-    p.add_argument("--no-auto-position", action="store_true", help="Use manual Grid X/Y instead of automatic stock placement")
+    p.add_argument("--auto-position", dest="no_auto_position", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--no-auto-position", dest="no_auto_position", action="store_true", help="Use manual Grid X/Y instead of automatic stock placement")
     p.add_argument("--mode", choices=list(LASER_MODES), default="Offset Fill")
     p.add_argument("--line-interval", type=float, default=0.10)
     p.add_argument("--passes", type=positive_int, default=1)
     p.add_argument("--scan-angle", type=float, default=0.0)
-    p.add_argument("--no-bidirectional", action="store_true")
+    p.add_argument("--bidirectional", dest="no_bidirectional", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--no-bidirectional", dest="no_bidirectional", action="store_true")
     p.add_argument("--language", choices=["English", "Deutsch"], default="English")
-    p.add_argument("--no-labels", action="store_true")
+    p.add_argument("--labels", dest="no_labels", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--no-labels", dest="no_labels", action="store_true")
     p.add_argument("--label-speed", type=float, default=2500)
     p.add_argument("--label-power", type=float, default=25)
     p.add_argument("--label-mode", choices=list(LASER_MODES), default="Line")
@@ -65,12 +124,27 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--stock-x", type=float, default=100)
     p.add_argument("--stock-y", type=float, default=100)
     p.add_argument("--stock-z", type=float, default=20)
-    p.add_argument("--no-round-speed", action="store_true", help="Do not round generated speed values")
-    p.add_argument("--no-round-power", action="store_true", help="Do not round generated power values")
+    p.add_argument("--round-speed", dest="no_round_speed", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--no-round-speed", dest="no_round_speed", action="store_true", help="Do not round generated speed values")
+    p.add_argument("--round-power", dest="no_round_power", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--no-round-power", dest="no_round_power", action="store_true", help="Do not round generated power values")
     p.add_argument("--nc-power-profile", choices=list(NC_POWER_PROFILES), default=DEFAULT_NC_POWER_PROFILE, help="Generic NC laser power scale profile")
     p.add_argument("--nc-s-max", type=float, default=1.0, help="Custom NC S-value for 100 percent power; used when --nc-power-profile Custom")
+    p.add_argument("--nc-include-labels", dest="nc_include_labels", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--no-nc-include-labels", dest="nc_include_labels", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--template-dir", type=Path, default=None)
     p.add_argument("--api", choices=AVAILABLE_API_COMMANDS, help="API commands")
+    p.add_argument("--config", type=Path, default=None, help="JSON config file for API preview/generate")
+    p.set_defaults(
+        overwrite=False,
+        auto_filename=False,
+        no_auto_position=False,
+        no_bidirectional=False,
+        no_labels=False,
+        no_round_speed=False,
+        no_round_power=False,
+        nc_include_labels=True,
+    )
     return p.parse_args(argv)
 
 
@@ -111,7 +185,69 @@ def settings_from_args(args: argparse.Namespace) -> GeneratorSettings:
         template_dir=args.template_dir,
         nc_power_profile=args.nc_power_profile,
         nc_s_max=resolve_nc_s_max(args.nc_power_profile, args.nc_s_max),
+        nc_include_labels=args.nc_include_labels,
     )
+
+
+def load_config_data(path: Path) -> dict:
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except OSError as exc:
+        raise ConfigError(f"could not read {path}: {exc}") from exc
+
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"{path} is not valid JSON: {exc.msg} at line {exc.lineno}, column {exc.colno}") from exc
+
+    if not isinstance(data, dict):
+        raise ConfigError(f"{path} must contain a JSON object")
+
+    return data
+
+
+def config_value_to_arg(value) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ConfigError("expected a string, number, or null value, got boolean")
+    if isinstance(value, (str, int, float)):
+        return str(value)
+    raise ConfigError(f"expected a string, number, or null value, got {type(value).__name__}")
+
+
+def config_data_to_argv(data: dict) -> list:
+    argv = []
+
+    for raw_key, value in data.items():
+        key = str(raw_key).replace("-", "_")
+
+        if key in CONFIG_BOOLEAN_OPTIONS:
+            if not isinstance(value, bool):
+                raise ConfigError(f"config key '{raw_key}' must be true or false")
+            true_option, false_option = CONFIG_BOOLEAN_OPTIONS[key]
+            argv.append(true_option if value else false_option)
+            continue
+
+        if key in CONFIG_SCALAR_OPTIONS:
+            arg_value = config_value_to_arg(value)
+            if arg_value is None:
+                continue
+            argv.extend([CONFIG_SCALAR_OPTIONS[key], arg_value])
+            continue
+
+        raise ConfigError(f"unsupported config key '{raw_key}'")
+
+    return argv
+
+
+def parse_args_with_api_config(raw_argv: Sequence[str]) -> argparse.Namespace:
+    args = parse_args(raw_argv)
+    if args.api not in CONFIG_API_COMMANDS or args.config is None:
+        return args
+
+    config_argv = config_data_to_argv(load_config_data(args.config))
+    return parse_args(config_argv + list(raw_argv))
 
 
 def api_json_value(value):
@@ -244,7 +380,13 @@ def generate_response(settings: GeneratorSettings) -> dict:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    args = parse_args(argv)
+    raw_argv = list(argv) if argv is not None else sys.argv[1:]
+    try:
+        args = parse_args_with_api_config(raw_argv)
+    except ConfigError as exc:
+        print(f"API config error: {exc}", file=sys.stderr)
+        return 2
+
     if args.gui:
         gui = GeneratorGui()
         gui.run()
