@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.6.2 - 2026-06-09
+
+JSON CLI API backend contract release.
+
+### Added
+
+- Completed the JSON CLI API command set for future UI/frontend work:
+  `--api app-info`, `--api default-settings`, `--api preview`, and
+  `--api generate`.
+- Added read-only `preview` API output for planned layout metadata without
+  writing generated files.
+- Added `generate` API output for writing MKS/NC files while returning clean
+  JSON without the normal human CLI guidance text.
+- Added developer API documentation in [docs/JSON_API.md](docs/JSON_API.md).
+
+### Changed
+
+- `app-info` now reports all JSON API commands as available and no planned API
+  commands remain.
+- Bumped visible version text to v1.6.2.
+
+### Notes
+
+- v1.x remains the stable Python/Tkinter line.
+- Future larger UI work is still planned for Tauri v2.0.
+- This release does not include a major Tkinter UI rewrite.
+- No generated MKS or generic NC toolpath behavior changed.
+
 ## v1.6.1 - 2026-06-09
 
 Backend/API groundwork and test hardening release.
