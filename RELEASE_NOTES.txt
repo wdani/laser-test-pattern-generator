@@ -1,8 +1,10 @@
-Laser Test Pattern Generator v1.6.0
+Laser Test Pattern Generator v1.6.1
 ===================================
 
-This release modernizes the GUI theme and numeric controls while keeping
-generated MKS and generic NC toolpath behavior unchanged.
+This is a small backend/API groundwork and test-hardening release for the
+stable Python/Tkinter v1.x line.
+
+The generated MKS and generic NC toolpath behavior is unchanged.
 
 Highlights
 ----------
@@ -12,30 +14,36 @@ Highlights
 - Generic .nc / G-code generation.
 - NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
 - Default generic NC profile is Makera (0-1).
-- Modernized Tkinter/ttk visual styling.
-- Light and Dark GUI theme selector with local preference persistence.
+- JSON CLI API groundwork for future UI/frontend work:
+  - python makera_material_test_generator.py --api app-info
+  - python makera_material_test_generator.py --api default-settings
+- Python core settings and the JSON CLI API remain the source of truth for
+  future UI/frontend work.
+- app-info reports release metadata, supported output formats, and available
+  API commands.
+- default-settings reports the full default GeneratorSettings values as valid
+  JSON.
+- Added and expanded tests for app-info, default-settings, and generated output
+  validation.
+- No major Tkinter UI rewrite is included in this release.
+- Future larger UI work is expected to target Tauri v2.0, while v1.x remains
+  the stable Python/Tkinter version.
+
+Existing v1.x Features
+----------------------
+
+- Modern Tkinter/ttk Light and Dark themes.
 - Improved numeric controls for common grid, stock, speed, power, laser, and
-  label settings. Manual typing still works.
-- Improved GUI layout with clearer grouping and workflow hints.
-- Right-side quick preview on wide windows, using the same layout logic as the
-  Preview tab.
-- Preview refreshes automatically after successful generation.
-- Manual preview update buttons were removed because preview now refreshes
-  automatically after generation, preset loads, tab changes, and key layout
-  edits.
-- The right-side quick preview hides while the detailed Preview tab is active.
-- The GUI output filename extension follows the selected format where it is
-  safe to update .mks / .nc.
-- Lightweight tooltips for key output, grid, laser/NC, and label controls.
-- Preset manager with metadata fields, import/export, and clearer save behavior.
+  label settings.
+- Right-side quick preview on wide windows.
+- Automatic preview refresh after generation, preset loads, tab changes, and
+  key layout edits.
+- Preset manager with metadata fields, import/export, and clearer save
+  behavior.
 - Optional preset metadata: name, material, machine, laser module, notes,
   safety note, and reference image.
-- Optional reference image metadata for result/reference photos. This is a
-  helper field only, not a full material journal.
-- Saving or importing over an existing preset asks for confirmation first.
 - Conservative preset starting points for cork, wood, cardboard, and
   Makera-style generic NC tests.
-- Preset documentation in docs/PRESETS.md.
 - Output modes for MKS, NC, or both.
 - English GUI.
 - Generated labels selectable between English and German.

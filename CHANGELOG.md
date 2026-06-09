@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.6.1 - 2026-06-09
+
+Backend/API groundwork and test hardening release.
+
+### Added
+
+- Added JSON CLI API groundwork for future UI/frontend work:
+  `--api app-info` and `--api default-settings`.
+- Added API tests for `app-info` and `default-settings`.
+- Added stronger generated output validation tests for MKS, NC, and combined
+  output generation.
+
+### Changed
+
+- `app-info` now reports the application version from the shared Python
+  settings source.
+- `default-settings` now derives its response from the real default
+  `GeneratorSettings` object so Python core defaults remain the source of
+  truth.
+- Bumped visible version text to v1.6.1.
+
+### Notes
+
+- v1.x remains the stable Python/Tkinter version.
+- This release does not include a major Tkinter UI rewrite.
+- No MKS or generic NC generation behavior changed.
+
 ## v1.6.0 - 2026-06-05
 
 Modern UI theme release.
