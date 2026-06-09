@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.6.3 - 2026-06-09
+
+JSON API config workflow and privacy-friendly update check release.
+
+### Added
+
+- Added JSON config-file support for `--api preview` and `--api generate` so
+  automation, future frontends, and companion tools can share generation
+  settings without duplicating long command lines.
+- Added example API config files under `examples/api/` for preview, generic NC
+  generation, and combined MKS/NC generation.
+- Added a manual GUI update check via **Help -> Check for updates** that
+  compares the current app version with the latest GitHub Release.
+- Added optional startup update checks, disabled by default, with at-most-once
+  per day checking when enabled.
+- Added update notification actions for remind tomorrow, remind in 10 days,
+  remind in 30 days, ignore this version, and disable update checks.
+
+### Changed
+
+- Improved JSON API documentation for config-file usage, CLI override
+  precedence, and result-path handling.
+- Bumped visible version text to v1.6.3.
+
+### Notes
+
+- The update check only contacts GitHub Releases when run manually or when
+  startup checks are explicitly enabled.
+- The update check displays current/latest versions and links to the latest
+  GitHub Release, but does not auto-download or auto-install anything.
+- v1.x remains the stable Python/Tkinter line.
+- This release does not include a major Tkinter UI rewrite.
+- No generated MKS or generic NC toolpath behavior changed.
+
 ## v1.6.2 - 2026-06-09
 
 JSON CLI API backend contract release.
