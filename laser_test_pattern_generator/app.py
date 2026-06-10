@@ -12,6 +12,7 @@ from .generator_mks import generate_mks
 from .generator_nc import generate_generic_nc, resolve_nc_s_max
 from .geometry import computed_layout, linspace, validate_layout
 from .gui import GeneratorGui
+from .job_manifest import write_job_manifest
 from .settings import (
     APP_VERSION,
     DEFAULT_NC_POWER_PROFILE,
@@ -72,6 +73,7 @@ CONFIG_BOOLEAN_OPTIONS = {
     "round_speed_values": ("--round-speed", "--no-round-speed"),
     "round_power_values": ("--round-power", "--no-round-power"),
     "nc_include_labels": ("--nc-include-labels", "--no-nc-include-labels"),
+    "write_manifest": ("--write-manifest", "--no-write-manifest"),
 }
 
 
@@ -133,6 +135,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--nc-include-labels", dest="nc_include_labels", action="store_true", help=argparse.SUPPRESS)
     p.add_argument("--no-nc-include-labels", dest="nc_include_labels", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--template-dir", type=Path, default=None)
+    p.add_argument("--write-manifest", dest="write_manifest", action="store_true", help="Write an optional JSON job manifest next to generated output")
+    p.add_argument("--no-write-manifest", dest="write_manifest", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--api", choices=AVAILABLE_API_COMMANDS, help="API commands")
     p.add_argument("--config", type=Path, default=None, help="JSON config file for API preview/generate")
     p.set_defaults(
@@ -144,6 +148,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         no_round_speed=False,
         no_round_power=False,
         nc_include_labels=True,
+        write_manifest=False,
     )
     return p.parse_args(argv)
 
@@ -186,6 +191,7 @@ def settings_from_args(args: argparse.Namespace) -> GeneratorSettings:
         nc_power_profile=args.nc_power_profile,
         nc_s_max=resolve_nc_s_max(args.nc_power_profile, args.nc_s_max),
         nc_include_labels=args.nc_include_labels,
+        write_manifest=args.write_manifest,
     )
 
 
@@ -362,8 +368,15 @@ def generate_output_infos(settings: GeneratorSettings) -> list:
     return infos
 
 
+def maybe_write_job_manifest(settings: GeneratorSettings, infos: list, source: str) -> Optional[dict]:
+    if not settings.write_manifest:
+        return None
+    return write_job_manifest(settings, infos, source=source)
+
+
 def generate_response(settings: GeneratorSettings) -> dict:
     infos = generate_output_infos(settings)
+    manifest_info = maybe_write_job_manifest(settings, infos, source="api")
     data = {
         "schema_version": API_SCHEMA_VERSION,
         "api_command": "generate",
@@ -375,6 +388,9 @@ def generate_response(settings: GeneratorSettings) -> dict:
         data["result"] = api_json_value(infos[0])
     else:
         data["results"] = api_json_value(infos)
+
+    if manifest_info is not None:
+        data["manifest"] = api_json_value(manifest_info)
 
     return data
 
@@ -413,8 +429,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     settings = settings_from_args(args)
     infos = generate_output_infos(settings)
+    manifest_info = maybe_write_job_manifest(settings, infos, source="cli")
 
-    print(json.dumps(infos if len(infos) > 1 else infos[0], indent=2, ensure_ascii=False))
+    output_data = infos if len(infos) > 1 else infos[0]
+    if manifest_info is not None:
+        output_data = {
+            "results": infos,
+            "manifest": manifest_info,
+        } if len(infos) > 1 else {
+            "result": infos[0],
+            "manifest": manifest_info,
+        }
+
+    print(json.dumps(output_data, indent=2, ensure_ascii=False))
     print("\nFor MKS: open in Makera Studio, click Recalculate, inspect Preview, then export.")
     print("For NC: verify your laser controller's S-value scale and preview in your sender/CAM before use.")
     return 0

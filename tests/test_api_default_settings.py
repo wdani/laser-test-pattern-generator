@@ -115,6 +115,7 @@ def test_default_settings_contains_generation_relevant_fields():
         "nc_s_max",
         "nc_units",
         "nc_include_labels",
+        "write_manifest",
     }
 
     missing_keys = expected_keys - set(data)

@@ -18,6 +18,7 @@ except Exception:
 from .generator_mks import generate_mks
 from .generator_nc import fmt_num, generate_generic_nc, profile_for_nc_s_max
 from .geometry import computed_layout, linspace, validate_layout
+from .job_manifest import write_job_manifest
 from .paths import expected_output_suffix_for_format, sync_output_suffix_for_format
 from .presets import (
     PRESET_METADATA_FIELDS,
@@ -575,6 +576,15 @@ class GeneratorGui:
             text="Manual checks are available from Help -> Check for updates.",
             style="Hint.TLabel",
         ).grid(row=3, column=1, columnspan=5, sticky="w", padx=6, pady=(0, 6))
+        self.vars["write_manifest"] = tk.BooleanVar(value=False)
+        manifest_check = ttk.Checkbutton(output, text="Write job manifest", variable=self.vars["write_manifest"])
+        manifest_check.grid(row=4, column=0, sticky="w", padx=6, pady=(0, 6))
+        self._tooltip(manifest_check, "Optional. Writes a reproducibility JSON file next to generated output.")
+        ttk.Label(
+            output,
+            text="Manifest files record settings and generated output paths for later reference.",
+            style="Hint.TLabel",
+        ).grid(row=4, column=1, columnspan=5, sticky="w", padx=6, pady=(0, 6))
         output.columnconfigure(0, weight=1)
 
         safety = ttk.Label(
@@ -1232,6 +1242,7 @@ class GeneratorGui:
             round_power_values=bool(self.vars["round_power_values"].get()),
             nc_power_profile=self.vars["nc_power_profile"].get(),
             nc_s_max=f("nc_s_max"),
+            write_manifest=bool(self.vars["write_manifest"].get()),
         )
 
     def _display_value(self, value) -> str:
@@ -1263,6 +1274,10 @@ class GeneratorGui:
             if settings.output_format in ("NC", "Both"):
                 infos.append(generate_generic_nc(copy.deepcopy(settings)))
 
+            manifest_info = None
+            if settings.write_manifest:
+                manifest_info = write_job_manifest(settings, infos, source="gui")
+
             for info in infos:
                 self._log("Created: " + info["output"])
                 if info.get("format") == "NC":
@@ -1273,6 +1288,9 @@ class GeneratorGui:
                 self._log("Power left -> right: " + ", ".join(self._display_value(x) for x in info["powers_left_to_right"]))
                 for warning in info.get("warnings", []):
                     self._log("WARNING: " + warning)
+
+            if manifest_info is not None:
+                self._log("Created manifest: " + manifest_info["output"])
 
             self._refresh_preview(log_warning=True)
             next_steps = self._next_steps_message(settings.output_format)

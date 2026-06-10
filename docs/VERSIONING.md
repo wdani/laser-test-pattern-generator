@@ -16,3 +16,6 @@ release:
 
 The visible app version may stay at the current release while documentation-only
 or planning branches are being prepared.
+
+Before publishing a release, use the practical packaging and verification steps
+in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md).

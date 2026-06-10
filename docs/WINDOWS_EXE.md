@@ -65,6 +65,8 @@ To test a build, download the workflow artifact, extract the ZIP, and run the
 executable from the extracted folder. Windows may show a warning because the
 experimental executable is not code-signed.
 
+For release packaging checks, use [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md).
+
 Always preview generated `.mks` files in Makera Studio after Recalculate, and
 always verify generic `.nc` files against the target controller before running a
 laser.
