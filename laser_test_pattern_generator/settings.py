@@ -67,4 +67,5 @@ class GeneratorSettings:
     nc_s_max: float = 1.0
     nc_units: str = "mm"
     nc_include_labels: bool = True
+    write_manifest: bool = False
 

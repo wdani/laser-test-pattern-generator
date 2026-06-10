@@ -62,6 +62,10 @@ Boolean config keys use the positive setting names, such as
 `labels_enabled: false`, `auto_position: true`, `round_speed_values: false`, or
 `overwrite_existing: true`.
 
+Use `write_manifest: true` to make `generate` write an optional
+`.manifest.json` file next to the generated output. The manifest records the app
+version, selected settings, and generated output paths for reproducibility.
+
 Invalid config files return a non-zero exit code, write a useful error to
 stderr, and do not print partial JSON to stdout.
 
@@ -241,6 +245,8 @@ Overwrite behavior:
 - The returned JSON `output` values are authoritative. Frontends must read the
   actual generated paths from `result.output` or each entry in the `results`
   array instead of deriving companion paths.
+- With `--write-manifest`, the response includes a `manifest` object with the
+  written manifest path.
 
 JSON shape for one output format:
 

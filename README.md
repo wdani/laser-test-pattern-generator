@@ -14,6 +14,9 @@ This is a cross-platform Python/Tkinter tool. The included `.bat` file and
 experimental `.exe` builds are Windows-only convenience launchers; the generator
 itself runs from Python on Windows, Linux, and macOS.
 
+For detailed installation and startup help, see
+[docs/INSTALLATION.md](docs/INSTALLATION.md).
+
 ## Features
 
 - Generate Makera Studio `.mks` project files.
@@ -40,6 +43,7 @@ itself runs from Python on Windows, Linux, and macOS.
 - Preset manager with JSON presets, metadata, import/export, and optional
   reference image paths.
 - Auto filename generation and overwrite protection.
+- Optional JSON job manifest next to generated output files for reproducibility.
 - Approximate preview tab plus automatic preview refresh after generation,
   preset loading, tab changes, and key layout edits.
 - In the GUI, the output filename extension follows the selected format where
@@ -75,6 +79,9 @@ python makera_material_test_generator.py --gui
 
 Tkinter is required. It is part of the Python standard library on many installs;
 on some Linux distributions it is packaged separately as `python3-tk`.
+
+For platform-specific setup and troubleshooting, see
+[docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 ## Update Checks
 
@@ -151,6 +158,16 @@ Generate German labels:
 python makera_material_test_generator.py --format MKS --language Deutsch --output material_test_de.mks
 ```
 
+Write an optional job manifest next to the generated output:
+
+```bash
+python makera_material_test_generator.py --format NC --output material_test.nc --write-manifest
+```
+
+The manifest is a JSON reproducibility aid for recording the app version,
+generation settings, and generated output paths. It is optional and is not a
+full material result log.
+
 ## Repository Layout
 
 - `makera_material_test_generator.py` - backwards-compatible CLI/GUI entry point.
@@ -202,8 +219,10 @@ Read [docs/SAFETY.md](docs/SAFETY.md).
 
 ## Roadmap
 
-See [docs/JSON_API.md](docs/JSON_API.md),
+See [docs/INSTALLATION.md](docs/INSTALLATION.md),
+[docs/JSON_API.md](docs/JSON_API.md),
 [docs/PRESETS.md](docs/PRESETS.md),
+[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md),
 [docs/ROADMAP.md](docs/ROADMAP.md), and
 [docs/VERSIONING.md](docs/VERSIONING.md).
 
