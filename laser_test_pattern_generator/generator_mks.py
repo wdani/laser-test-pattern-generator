@@ -415,6 +415,7 @@ def generate_mks(settings: GeneratorSettings) -> Dict[str, object]:
 
     return {
         "output": str(output_path),
+        "format": "MKS",
         "paths": len(paths),
         "shapes": len(shapes),
         "label_shapes": len(label_mesh_ids),

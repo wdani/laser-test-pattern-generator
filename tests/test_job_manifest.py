@@ -7,7 +7,7 @@ from io import StringIO
 from pathlib import Path
 
 from laser_test_pattern_generator import app
-from laser_test_pattern_generator.job_manifest import manifest_path_for_output
+from laser_test_pattern_generator.job_manifest import generated_output_entries, manifest_path_for_output
 from laser_test_pattern_generator.settings import APP_VERSION
 
 
@@ -171,6 +171,75 @@ class JobManifestTests(unittest.TestCase):
         manifest_path = manifest_path_for_output(output_path)
         self.assertEqual(data["manifest"]["output"], str(manifest_path))
         self.assertTrue(manifest_path.exists())
+
+    def test_manifest_format_fallback_uses_output_suffix(self):
+        root = self.make_workspace_tmp()
+
+        entries = generated_output_entries(
+            [
+                {"output": str(root / "legacy.mks")},
+                {"output": str(root / "legacy.nc")},
+            ],
+            root,
+        )
+
+        self.assertEqual(entries, [{"format": "MKS", "path": "legacy.mks"}, {"format": "NC", "path": "legacy.nc"}])
+
+    def test_mks_manifest_entry_has_mks_format(self):
+        root = self.make_workspace_tmp()
+        output_path = root / "mks_manifest.mks"
+
+        self.run_app(
+            [
+                "--format",
+                "MKS",
+                "--output",
+                str(output_path),
+                "--overwrite",
+                "--write-manifest",
+                "--rows",
+                "1",
+                "--cols",
+                "1",
+                "--no-labels",
+            ]
+        )
+
+        manifest_path = manifest_path_for_output(output_path)
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(data["generated_outputs"], [{"format": "MKS", "path": "mks_manifest.mks"}])
+
+    def test_both_manifest_entries_have_clear_formats(self):
+        root = self.make_workspace_tmp()
+        output_path = root / "both_manifest.mks"
+
+        self.run_app(
+            [
+                "--format",
+                "Both",
+                "--output",
+                str(output_path),
+                "--overwrite",
+                "--write-manifest",
+                "--rows",
+                "1",
+                "--cols",
+                "1",
+                "--no-labels",
+            ]
+        )
+
+        manifest_path = manifest_path_for_output(output_path)
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            data["generated_outputs"],
+            [
+                {"format": "MKS", "path": "both_manifest.mks"},
+                {"format": "NC", "path": "both_manifest.nc"},
+            ],
+        )
 
 
 if __name__ == "__main__":

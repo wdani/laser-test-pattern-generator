@@ -28,13 +28,26 @@ def portable_path(path: Path, base_dir: Path) -> str:
         return str(path)
 
 
+def output_format_from_info(info: Mapping[str, object], output_path: Path) -> str:
+    explicit_format = str(info.get("format", "")).strip()
+    if explicit_format:
+        return explicit_format
+
+    suffix = output_path.suffix.lower()
+    if suffix == ".mks":
+        return "MKS"
+    if suffix == ".nc":
+        return "NC"
+    return ""
+
+
 def generated_output_entries(infos: Sequence[Mapping[str, object]], manifest_dir: Path) -> list:
     entries = []
     for info in infos:
         output = Path(str(info["output"]))
         entries.append(
             {
-                "format": str(info.get("format", "")),
+                "format": output_format_from_info(info, output),
                 "path": portable_path(output, manifest_dir),
             }
         )
