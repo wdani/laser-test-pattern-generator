@@ -44,6 +44,8 @@ For detailed installation and startup help, see
   reference image paths.
 - Auto filename generation and overwrite protection.
 - Optional JSON job manifest next to generated output files for reproducibility.
+- Local JSONL material result log foundation for recording real-world test
+  observations.
 - Approximate preview tab plus automatic preview refresh after generation,
   preset loading, tab changes, and key layout edits.
 - In the GUI, the output filename extension follows the selected format where
@@ -168,6 +170,15 @@ The manifest is a JSON reproducibility aid for recording the app version,
 generation settings, and generated output paths. It is optional and is not a
 full material result log.
 
+Append a simple material test result observation:
+
+```bash
+python makera_material_test_generator.py --log-result --material-name cork --result-rating good --result-notes "Clean result"
+```
+
+See [docs/MATERIAL_RESULTS.md](docs/MATERIAL_RESULTS.md) for the JSONL result
+log format and API usage.
+
 ## Repository Layout
 
 - `makera_material_test_generator.py` - backwards-compatible CLI/GUI entry point.
@@ -221,6 +232,7 @@ Read [docs/SAFETY.md](docs/SAFETY.md).
 
 See [docs/INSTALLATION.md](docs/INSTALLATION.md),
 [docs/JSON_API.md](docs/JSON_API.md),
+[docs/MATERIAL_RESULTS.md](docs/MATERIAL_RESULTS.md),
 [docs/PRESETS.md](docs/PRESETS.md),
 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md),
 [docs/ROADMAP.md](docs/ROADMAP.md), and

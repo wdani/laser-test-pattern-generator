@@ -14,6 +14,7 @@ Versioning is documented in [VERSIONING.md](VERSIONING.md).
 - Generic NC profile documentation.
 - Small UI polish.
 - Material preset feedback and cleanup.
+- Build on the local JSONL material result logging foundation.
 - Collect feedback on the experimental Windows executable build workflow.
 
 ## v1.5.0 candidates

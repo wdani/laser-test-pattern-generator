@@ -27,6 +27,7 @@ normal command-line workflow.
 | `default-settings` | No | Get the complete default `GeneratorSettings` values. |
 | `preview` | No | Calculate a read-only layout preview from CLI settings. |
 | `generate` | Yes | Generate MKS/NC output files and return machine-readable results. |
+| `log-result` | Yes | Append one material test observation to a local JSONL log. |
 
 ## JSON Config Files
 
@@ -142,6 +143,7 @@ Important JSON fields:
 - NC defaults: `nc_power_profile`, `nc_s_max`, `nc_units`,
   `nc_include_labels`
 - Template default: `template_dir`
+- Manifest default: `write_manifest`
 
 Path values are serialized as strings or `null`.
 
@@ -300,6 +302,58 @@ Intended frontend usage:
 - Preserve backend overwrite behavior instead of implementing a separate
   frontend overwrite policy.
 
+## log-result
+
+Example:
+
+```bash
+python makera_material_test_generator.py --api log-result --result-log material_test_results.jsonl --material-name cork --result-rating good
+```
+
+Writes files: Yes.
+
+Purpose:
+
+Appends one real-world material test observation to a local JSONL result log.
+This does not generate `.mks` or `.nc` files and does not require a database.
+
+Important options:
+
+- `--result-log PATH`
+- `--material-name TEXT`
+- `--result-rating good|too_light|too_dark|burned|unclear`
+- `--result-notes TEXT`
+- `--manifest PATH`
+- `--generated-output PATH`
+- `--photo PATH`
+- `--machine-name TEXT`
+- `--laser-module TEXT`
+- `--selected-speed VALUE`
+- `--selected-power VALUE`
+
+Response shape:
+
+```json
+{
+  "schema_version": 1,
+  "api_command": "log-result",
+  "success": true,
+  "log_path": "material_test_results.jsonl",
+  "entry": {
+    "schema_version": 1,
+    "material_name": "cork",
+    "result_rating": "good"
+  }
+}
+```
+
+Intended frontend usage:
+
+- Record observed results after a user has run and inspected a generated test.
+- Link observations to optional job manifests with `--manifest`.
+- Keep material result logging local and file-based.
+- Treat this as a foundation, not a full material database.
+
 ## Frontend Architecture Guidance
 
 - The Python backend and JSON CLI API are the source of truth.
@@ -308,6 +362,8 @@ Intended frontend usage:
 - Frontends should use `preview` for safe, read-only layout feedback.
 - Frontends should call `generate` only when the user intentionally wants files
   written.
+- Frontends can call `log-result` after real-world testing to record
+  observations in a local JSONL file.
 - Frontends should not duplicate MKS/NC toolpath generation logic.
 - Frontends should not duplicate default settings manually.
 - Any generated `.mks` or `.nc` file must still be previewed and verified before

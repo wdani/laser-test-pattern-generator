@@ -13,6 +13,13 @@ from .generator_nc import generate_generic_nc, resolve_nc_s_max
 from .geometry import computed_layout, linspace, validate_layout
 from .gui import GeneratorGui
 from .job_manifest import write_job_manifest
+from .material_log import (
+    DEFAULT_RESULT_LOG_PATH,
+    RESULT_RATINGS,
+    MaterialLogError,
+    append_material_result,
+    build_material_result_entry,
+)
 from .settings import (
     APP_VERSION,
     DEFAULT_NC_POWER_PROFILE,
@@ -23,7 +30,7 @@ from .settings import (
 
 API_SCHEMA_VERSION = 1
 APP_NAME = "Laser Test Pattern Generator"
-AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview", "generate"]
+AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview", "generate", "log-result"]
 PLANNED_API_COMMANDS = []
 CONFIG_API_COMMANDS = {"preview", "generate"}
 
@@ -96,7 +103,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--no-overwrite", dest="overwrite", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--auto-filename", dest="auto_filename", action="store_true", help="Generate filename from material and test settings")
     p.add_argument("--no-auto-filename", dest="auto_filename", action="store_false", help=argparse.SUPPRESS)
-    p.add_argument("--material-name", default="material", help="Material name used for auto filenames")
+    p.add_argument("--material-name", default=None, help="Material name used for auto filenames")
     p.add_argument("--format", choices=["MKS", "NC", "Both"], default="MKS", help="Output format")
     p.add_argument("--rows", type=positive_int, default=6)
     p.add_argument("--cols", type=positive_int, default=6)
@@ -137,6 +144,17 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--template-dir", type=Path, default=None)
     p.add_argument("--write-manifest", dest="write_manifest", action="store_true", help="Write an optional JSON job manifest next to generated output")
     p.add_argument("--no-write-manifest", dest="write_manifest", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--log-result", action="store_true", help="Append one material test result entry to a local JSONL log")
+    p.add_argument("--result-log", type=Path, default=DEFAULT_RESULT_LOG_PATH, help="Material result JSONL log path")
+    p.add_argument("--result-rating", default=None, help=f"Observed result rating ({', '.join(RESULT_RATINGS)})")
+    p.add_argument("--result-notes", default=None, help="Notes for a material test result log entry")
+    p.add_argument("--manifest", dest="manifest_path", type=Path, default=None, help="Related job manifest path for result logging")
+    p.add_argument("--generated-output", dest="generated_output_path", type=Path, default=None, help="Related generated output path for result logging")
+    p.add_argument("--photo", dest="photo_path", type=Path, default=None, help="Related result photo path for result logging")
+    p.add_argument("--machine-name", default=None, help="Machine name for result logging")
+    p.add_argument("--laser-module", default=None, help="Laser module name for result logging")
+    p.add_argument("--selected-speed", type=float, default=None, help="Observed best/selected speed for result logging")
+    p.add_argument("--selected-power", type=float, default=None, help="Observed best/selected power for result logging")
     p.add_argument("--api", choices=AVAILABLE_API_COMMANDS, help="API commands")
     p.add_argument("--config", type=Path, default=None, help="JSON config file for API preview/generate")
     p.set_defaults(
@@ -159,7 +177,7 @@ def settings_from_args(args: argparse.Namespace) -> GeneratorSettings:
         output_format=args.format,
         overwrite_existing=args.overwrite,
         auto_filename=args.auto_filename,
-        material_name=args.material_name,
+        material_name=args.material_name or "material",
         rows=args.rows,
         cols=args.cols,
         speed_min=args.speed_min,
@@ -395,6 +413,31 @@ def generate_response(settings: GeneratorSettings) -> dict:
     return data
 
 
+def material_result_response(args: argparse.Namespace, source: str) -> dict:
+    entry = build_material_result_entry(
+        app_version=APP_VERSION,
+        material_name=args.material_name,
+        result_rating=args.result_rating,
+        source=source,
+        machine_name=args.machine_name,
+        laser_module=args.laser_module,
+        manifest_path=args.manifest_path,
+        generated_output_path=args.generated_output_path,
+        selected_speed=args.selected_speed,
+        selected_power=args.selected_power,
+        notes=args.result_notes,
+        photo_path=args.photo_path,
+    )
+    log_path = append_material_result(args.result_log, entry)
+    return {
+        "schema_version": API_SCHEMA_VERSION,
+        "api_command": "log-result",
+        "success": True,
+        "log_path": str(log_path),
+        "entry": api_json_value(entry),
+    }
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     raw_argv = list(argv) if argv is not None else sys.argv[1:]
     try:
@@ -425,6 +468,22 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.api == "generate":
         settings = settings_from_args(args)
         print(json.dumps(generate_response(settings), indent=2, ensure_ascii=False))
+        return 0
+
+    if args.api == "log-result":
+        try:
+            print(json.dumps(material_result_response(args, source="api"), indent=2, ensure_ascii=False))
+        except MaterialLogError as exc:
+            print(f"Material log error: {exc}", file=sys.stderr)
+            return 2
+        return 0
+
+    if args.log_result:
+        try:
+            print(json.dumps(material_result_response(args, source="cli"), indent=2, ensure_ascii=False))
+        except MaterialLogError as exc:
+            print(f"Material log error: {exc}", file=sys.stderr)
+            return 2
         return 0
 
     settings = settings_from_args(args)
