@@ -215,6 +215,73 @@ class MaterialLogTests(unittest.TestCase):
         self.assertIn("Material log error", stderr)
         self.assertFalse(log_path.exists())
 
+    def test_cli_log_result_without_material_name_fails_without_creating_log(self):
+        root = self.make_workspace_tmp()
+        log_path = root / "missing_material_cli.jsonl"
+
+        exit_code, stdout, stderr = self.run_app(
+            [
+                "--log-result",
+                "--result-log",
+                str(log_path),
+                "--result-rating",
+                "good",
+            ]
+        )
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout, "")
+        self.assertIn("Material log error", stderr)
+        self.assertFalse(log_path.exists())
+
+    def test_api_log_result_without_material_name_fails_without_creating_log(self):
+        root = self.make_workspace_tmp()
+        log_path = root / "missing_material_api.jsonl"
+
+        exit_code, stdout, stderr = self.run_app(
+            [
+                "--api",
+                "log-result",
+                "--result-log",
+                str(log_path),
+                "--result-rating",
+                "good",
+            ]
+        )
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(stdout, "")
+        self.assertIn("Material log error", stderr)
+        self.assertFalse(log_path.exists())
+
+    def test_normal_generation_without_material_name_still_uses_default(self):
+        root = self.make_workspace_tmp()
+        output_path = root / "generated.nc"
+
+        exit_code, stdout, stderr = self.run_app(
+            [
+                "--format",
+                "NC",
+                "--output",
+                str(output_path),
+                "--overwrite",
+                "--auto-filename",
+                "--rows",
+                "1",
+                "--cols",
+                "1",
+                "--no-labels",
+            ]
+        )
+
+        self.assertEqual(exit_code, 0, stderr)
+        metadata, _ = json.JSONDecoder().raw_decode(stdout)
+        generated_path = Path(metadata["output"])
+        self.assertTrue(generated_path.exists())
+        self.assertEqual(generated_path.parent, root)
+        self.assertTrue(generated_path.name.startswith("material_1x1_"))
+        self.assertIn("For NC: verify your laser controller", stdout)
+
     def test_api_log_result_invalid_rating_returns_nonzero_without_stdout(self):
         root = self.make_workspace_tmp()
         log_path = root / "invalid_rating.jsonl"

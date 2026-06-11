@@ -103,7 +103,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--no-overwrite", dest="overwrite", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--auto-filename", dest="auto_filename", action="store_true", help="Generate filename from material and test settings")
     p.add_argument("--no-auto-filename", dest="auto_filename", action="store_false", help=argparse.SUPPRESS)
-    p.add_argument("--material-name", default="material", help="Material name used for auto filenames")
+    p.add_argument("--material-name", default=None, help="Material name used for auto filenames")
     p.add_argument("--format", choices=["MKS", "NC", "Both"], default="MKS", help="Output format")
     p.add_argument("--rows", type=positive_int, default=6)
     p.add_argument("--cols", type=positive_int, default=6)
@@ -177,7 +177,7 @@ def settings_from_args(args: argparse.Namespace) -> GeneratorSettings:
         output_format=args.format,
         overwrite_existing=args.overwrite,
         auto_filename=args.auto_filename,
-        material_name=args.material_name,
+        material_name=args.material_name or "material",
         rows=args.rows,
         cols=args.cols,
         speed_min=args.speed_min,
