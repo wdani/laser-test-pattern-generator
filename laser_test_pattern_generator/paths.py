@@ -12,7 +12,14 @@ GENERATED_OUTPUT_SUFFIXES = {".mks", ".nc"}
 
 def package_dir() -> Path:
     if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent
+        executable_dir = Path(sys.executable).resolve().parent
+        if (
+            executable_dir.name == "MacOS"
+            and executable_dir.parent.name == "Contents"
+            and executable_dir.parent.parent.suffix == ".app"
+        ):
+            return executable_dir.parent.parent.parent
+        return executable_dir
     return Path(__file__).resolve().parents[1]
 
 

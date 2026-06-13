@@ -16,7 +16,9 @@ Use the source version if you want to run the tool with Python, inspect the code
 
 ### macOS users
 
-A native macOS `.app` / `.dmg` package is not available yet. For now, use the Python/source startup path. macOS packaging is tracked separately in issue #41.
+Use the Python/source startup path. Experimental macOS `.app` artifacts may be
+available from GitHub Actions, but they are unsigned, not notarized, and not yet
+the primary supported startup path.
 
 ### Linux users
 
@@ -69,7 +71,8 @@ python makera_material_test_generator.py --gui
 
 ## macOS: Python/source startup
 
-A native macOS app bundle is not available yet. Use Python for now.
+Use Python if no macOS app artifact is available, if macOS blocks the
+experimental app bundle, or if you want the most reliable startup path.
 
 1. Install Python 3 if it is not already installed.
 2. Download and extract the source ZIP, or clone the repository.
@@ -87,6 +90,13 @@ python3 makera_material_test_generator.py --gui
 ```
 
 If macOS blocks files downloaded from the internet, make sure you extracted the ZIP into a normal user folder such as Downloads or Documents and run the Python command from Terminal.
+
+## macOS: experimental app artifact
+
+Experimental macOS app artifacts may be produced by GitHub Actions. They are
+unsigned and not notarized, so macOS Gatekeeper may warn or block them.
+
+See [MACOS_APP.md](MACOS_APP.md) for details and fallback instructions.
 
 ## Linux / Ubuntu: Python/source startup
 
@@ -175,6 +185,7 @@ Always preview the generated file before running it. In Makera Studio, open the 
 ## Related documentation
 
 - [Windows executable builds](WINDOWS_EXE.md)
+- [macOS app builds](MACOS_APP.md)
 - [Safety notes](SAFETY.md)
 - [Presets](PRESETS.md)
 - [JSON API](JSON_API.md)
