@@ -1,5 +1,57 @@
 # Changelog
 
+## v1.7.0 - 2026-06-13
+
+Makera Studio NC and workflow foundation release.
+
+### Added
+
+- Added an experimental Makera Studio-style `.nc` output flavor.
+- Added the `nc_flavor` setting with `generic` and `makera-studio` options.
+- Added `z_offset` and `indent_distance` settings for Makera Studio parity and
+  future workflow use.
+- Added Makera Studio-style NC metadata, header/footer structure, and
+  deterministic toolpath markers.
+- Added Makera Studio-style `G1 ... S... F...` laser movement for the
+  experimental NC flavor.
+- Added labels in Makera Studio NC output using deterministic built-in
+  stroke/bar geometry.
+- Added Line, Fill, and Offset Fill support in Makera Studio NC output.
+- Added Makera Studio NC Fill support for line interval, bidirectional on/off,
+  scan angle, passes, and indent distance.
+- Added connected nested contour-style paths for Makera Studio NC Offset Fill.
+- Added optional JSON job manifests for generated output files.
+- Added local JSONL material test result logging.
+- Added the safety preflight checklist JSON API.
+- Added a release package verification helper.
+- Added an experimental macOS app packaging workflow.
+- Added dedicated installation and startup instructions for Windows, macOS, and
+  Linux.
+- Added `temp/` to ignored paths for local Makera Studio reference `.nc` files.
+
+### Changed
+
+- Generic NC remains the default NC flavor and its existing output behavior is
+  unchanged.
+- Documentation now separates generic NC and experimental Makera Studio NC
+  output flavors.
+- Improved release/package documentation and package verification workflow.
+- MKS path metadata can carry `z_offset` and `indent_distance` where
+  appropriate.
+- Bumped visible version text to v1.7.0.
+
+### Notes
+
+- Makera Studio NC output is experimental and must be previewed and verified
+  before machine use.
+- This is not legacy Makera CAM `.mkc` support.
+- This is not old Makera CAM `.nc` support.
+- Thumbnail/base64 embedding is not implemented yet.
+- `z_offset` is exposed as a setting, but direct Makera Studio NC output keeps
+  `G0 Z0` for observed Makera Studio parity.
+- v1.x remains the stable Python/Tkinter line.
+- No major UI rewrite is included.
+
 ## v1.6.3 - 2026-06-09
 
 JSON API config workflow and privacy-friendly update check release.
