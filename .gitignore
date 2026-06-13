@@ -16,6 +16,7 @@ outputs/
 examples/*
 !examples/api/
 !examples/api/*.json
+temp/
 tmp/
 config/ui_settings.json
 *.tmp

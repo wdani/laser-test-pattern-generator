@@ -10,7 +10,7 @@ from typing import Optional, Sequence
 
 from .generator_mks import generate_mks
 from .generator_nc import generate_generic_nc, resolve_nc_s_max
-from .generator_nc_makera import generate_makera_studio_nc
+from .generator_nc_makera import MakeraStudioNcGenerationError, generate_makera_studio_nc
 from .geometry import computed_layout, linspace, validate_layout
 from .gui import GeneratorGui
 from .job_manifest import write_job_manifest
@@ -505,7 +505,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.api == "generate":
         settings = settings_from_args(args)
-        print(json.dumps(generate_response(settings), indent=2, ensure_ascii=False))
+        try:
+            print(json.dumps(generate_response(settings), indent=2, ensure_ascii=False))
+        except MakeraStudioNcGenerationError as exc:
+            print(f"Makera Studio NC generation error: {exc}", file=sys.stderr)
+            return 2
         return 0
 
     if args.api == "log-result":
@@ -525,8 +529,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     settings = settings_from_args(args)
-    infos = generate_output_infos(settings)
-    manifest_info = maybe_write_job_manifest(settings, infos, source="cli")
+    try:
+        infos = generate_output_infos(settings)
+        manifest_info = maybe_write_job_manifest(settings, infos, source="cli")
+    except MakeraStudioNcGenerationError as exc:
+        print(f"Makera Studio NC generation error: {exc}", file=sys.stderr)
+        return 2
 
     output_data = infos if len(infos) > 1 else infos[0]
     if manifest_info is not None:

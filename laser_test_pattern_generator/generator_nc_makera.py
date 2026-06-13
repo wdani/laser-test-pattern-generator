@@ -12,6 +12,10 @@ from .settings import APP_VERSION, GeneratorSettings, LASER_MODES
 Point = Tuple[float, float]
 
 
+class MakeraStudioNcGenerationError(ValueError):
+    """Raised when Makera Studio-style NC geometry cannot be generated safely."""
+
+
 def rounded_axis_values(start: float, end: float, count: int, should_round: bool) -> list:
     values = linspace(start, end, count)
     if should_round:
@@ -74,12 +78,16 @@ def effective_rect(x: float, y: float, w: float, h: float, indent: float) -> tup
     ew = w - 2 * indent
     eh = h - 2 * indent
     if ew <= 0.01 or eh <= 0.01:
-        raise ValueError("Indent distance is too large for the tile size.")
+        raise MakeraStudioNcGenerationError("Indent distance is too large for the tile size.")
     return ex, ey, ew, eh
 
 
 def rectangle_points(x: float, y: float, w: float, h: float) -> list[Point]:
     return [(x, y), (x + w, y), (x + w, y + h), (x, y + h), (x, y)]
+
+
+def offset_rectangle_points(x: float, y: float, w: float, h: float) -> list[Point]:
+    return [(x + w, y), (x + w, y + h), (x, y + h), (x, y), (x + w, y)]
 
 
 def add_rectangle_outline(lines: List[str], x: float, y: float, w: float, h: float, speed: float, power: float, s_max: float) -> int:
@@ -239,10 +247,20 @@ def scanline_segments(x: float, y: float, w: float, h: float, interval: float, a
     projections = [normal[0] * cx + normal[1] * cy for cx, cy in corners]
     start = min(projections)
     end = max(projections)
-    count = max(1, int(math.floor((end - start) / interval)) + 1)
-    values = [start + i * interval for i in range(count)]
-    if values[-1] < end - 1e-6:
-        values.append(end)
+    span = end - start
+    if span <= 1e-9:
+        return []
+
+    edge_margin = min(interval / 2.0, span / 2.0)
+    first = start + edge_margin
+    last = end - edge_margin
+    values: list[float] = []
+    value = first
+    while value <= last + 1e-9:
+        values.append(value)
+        value += interval
+    if not values:
+        values.append((start + end) / 2.0)
 
     segments: list[tuple[Point, Point]] = []
     for i, value in enumerate(values):
@@ -297,10 +315,12 @@ def add_offset_fill(
     interval = max(0.01, float(interval))
     count = 0
     for _pass in range(int(passes)):
+        points: list[Point] = []
         inset = interval
         while ew - 2 * inset > 0.01 and eh - 2 * inset > 0.01:
-            count += add_rectangle_outline(lines, ex + inset, ey + inset, ew - 2 * inset, eh - 2 * inset, speed, power, s_max)
+            points.extend(offset_rectangle_points(ex + inset, ey + inset, ew - 2 * inset, eh - 2 * inset))
             inset += interval
+        count += add_polyline(lines, points, speed, power, s_max)
     return count
 
 
