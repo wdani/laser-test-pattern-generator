@@ -66,6 +66,11 @@ executable from the extracted folder. Windows may show a warning because the
 experimental executable is not code-signed.
 
 For release packaging checks, use [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md).
+The package layout can also be checked directly with:
+
+```bash
+python scripts/verify_release_package.py path/to/Laser_Test_Pattern_Generator_windows
+```
 
 Always preview generated `.mks` files in Makera Studio after Recalculate, and
 always verify generic `.nc` files against the target controller before running a

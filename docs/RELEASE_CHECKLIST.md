@@ -20,6 +20,8 @@ It is meant to be practical and beginner-friendly.
 ## Windows Package Check
 
 - Download and extract the Windows ZIP package.
+- Run the package verifier against the extracted package folder:
+  - `python scripts/verify_release_package.py path/to/Laser_Test_Pattern_Generator_windows`
 - Confirm `LaserTestPatternGenerator.exe` starts the GUI.
 - Confirm `_internal/`, `templates/`, and `presets/` are present.
 - Confirm preset loading works from the GUI.
@@ -50,6 +52,8 @@ It is meant to be practical and beginner-friendly.
 
 - Confirm the correct files are attached to the GitHub Release.
 - Confirm no scratch/generated test output is accidentally included.
+- Confirm `scripts/verify_release_package.py` passes for the Windows package or
+  release ZIP.
 - Confirm release notes match the published version.
 - Confirm release asset naming is clear and consistent.
 - Confirm Windows ZIP assets, if present, are not ZIP-inside-ZIP workflow
