@@ -21,3 +21,6 @@ tmp/
 config/ui_settings.json
 *.tmp
 *.bak
+
+# Local design-study/reference folders
+/concept a_b/
