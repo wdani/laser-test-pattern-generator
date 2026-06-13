@@ -1,62 +1,69 @@
-Laser Test Pattern Generator v1.6.3
+Laser Test Pattern Generator v1.7.0
 ===================================
 
-This release adds JSON API config-file workflow support and a privacy-friendly
-GitHub Releases update check for the stable Python/Tkinter v1.x line.
+Makera Studio NC and workflow foundation release.
 
-The generated MKS and generic NC toolpath behavior is unchanged.
+This release expands the stable Python/Tkinter v1.x line with an experimental
+Makera Studio-style NC output flavor and several workflow foundations added
+since v1.6.3.
 
-Highlights
-----------
+The existing generic NC output remains the default and is unchanged. Generated
+MKS output behavior is unchanged except that path metadata can now carry
+z_offset and indent_distance where appropriate.
 
-- Cross-platform Python/Tkinter GUI and command-line generator.
-- Makera Studio .mks generation.
-- Generic .nc / G-code generation.
-- NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
-- Default generic NC profile is Makera (0-1).
-- JSON CLI API command set:
-  - python makera_material_test_generator.py --api app-info
-  - python makera_material_test_generator.py --api default-settings
-  - python makera_material_test_generator.py --api preview
-  - python makera_material_test_generator.py --api generate
-- JSON config-file support for API preview/generate workflows:
-  - python makera_material_test_generator.py --api preview --config examples/api/preview_basic.json
-  - python makera_material_test_generator.py --api generate --config examples/api/generate_nc_basic.json
-- Example API configs are included under examples/api/ for preview, generic NC
-  generation, and combined MKS/NC generation.
-- CLI arguments override JSON config values, so automation can use shared
-  config files while still changing one-off settings.
-- Developer API documentation is available in docs/JSON_API.md for future
-  automation, frontend, local tooling, and companion-tool work.
-- Manual GUI update check from Help -> Check for updates.
-- Optional startup update checks are available but disabled by default.
-- Startup checks run at most once per day when enabled.
-- The update dialog shows the current version, latest version, and a direct
-  link to the latest GitHub Release.
-- Update notifications support remind tomorrow, remind in 10 days, remind in
-  30 days, ignore this version, and disable update checks.
-- The update check does not auto-download or auto-install anything.
-- No major Tkinter UI rewrite is included in this release.
+Main Highlight
+--------------
+
+- Experimental Makera Studio-style .nc output flavor.
+
+The new NC flavor is selected with:
+
+python makera_material_test_generator.py --format NC --nc-flavor makera-studio --output material_test_makera_studio.nc
+
+It targets the newer Makera Studio-style .nc export structure and includes:
+
+- Makera Studio-style metadata/header/footer/toolpath markers.
+- Makera Studio-style G1 moves with S and F on cutting moves.
+- Labels in NC output.
+- Line, Fill, and Offset Fill tile modes.
+- Fill support for line interval, bidirectional on/off, scan angle, passes,
+  and indent distance.
+- Offset Fill as connected nested contour-style paths.
+
+Other Highlights Since v1.6.3
+-----------------------------
+
+- Dedicated installation/startup documentation for Windows, macOS, and Linux.
+- Optional JSON job manifests for generated output files.
+- Local JSONL material test result logging.
+- Safety preflight checklist JSON API.
+- Release package verification helper for maintainers.
+- Experimental macOS app packaging workflow.
+- Improved release/package documentation.
+- temp/ is ignored for local Makera Studio reference .nc files.
 
 Existing v1.x Features
 ----------------------
 
+- Cross-platform Python/Tkinter GUI and command-line generator.
+- Makera Studio .mks generation.
+- Generic .nc / G-code generation.
+- Output modes for MKS, NC, or both.
+- NC power profiles: Makera (0-1), GRBL (0-1000), 8-bit (0-255), and Custom.
+- JSON CLI API:
+  - python makera_material_test_generator.py --api app-info
+  - python makera_material_test_generator.py --api default-settings
+  - python makera_material_test_generator.py --api preview
+  - python makera_material_test_generator.py --api generate
+  - python makera_material_test_generator.py --api log-result
+  - python makera_material_test_generator.py --api preflight-checklist
+- JSON config-file support for API preview/generate workflows.
+- Preset manager with metadata, import/export, and reference-image metadata.
 - Modern Tkinter/ttk Light and Dark themes.
-- Improved numeric controls for common grid, stock, speed, power, laser, and
-  label settings.
 - Right-side quick preview on wide windows.
 - Automatic preview refresh after generation, preset loads, tab changes, and
   key layout edits.
-- Preset manager with metadata fields, import/export, and clearer save
-  behavior.
-- Optional preset metadata: name, material, machine, laser module, notes,
-  safety note, and reference image.
-- Conservative preset starting points for cork, wood, cardboard, and
-  Makera-style generic NC tests.
-- Output modes for MKS, NC, or both.
-- English GUI.
 - Generated labels selectable between English and German.
-- Included Makera templates and JSON presets.
 - Windows convenience launcher: start_gui_windows.bat.
 
 Linux/macOS Start
@@ -75,18 +82,30 @@ Double-click start_gui_windows.bat, or run:
 
 python makera_material_test_generator.py --gui
 
-Notes
------
+Safety Notes
+------------
 
+- All generated machine-control files must be previewed and verified before
+  running a laser.
+- Always preview generated .mks files in Makera Studio after Recalculate.
+- Always verify generic .nc files against your controller's S-value scale.
+- Always preview and verify experimental Makera Studio-style .nc files before
+  machine use.
+- Presets are starting points, not guaranteed safe machine settings.
+
+Limitations and Notes
+---------------------
+
+- Makera Studio-style NC output is experimental.
+- This is not legacy Makera CAM .mkc support.
+- This is not old Makera CAM .nc support.
+- Thumbnail/base64 embedding is not implemented yet.
+- z_offset is exposed as a setting, but direct Makera Studio NC output keeps
+  G0 Z0 for observed Makera Studio parity.
 - Windows executable builds remain experimental.
-- No third-party Python packages are required.
+- macOS app builds remain experimental and unsigned.
+- No major Tkinter UI rewrite is included.
+- No third-party Python packages are required for the source version.
 - Python core settings and the JSON CLI API remain the source of truth.
 - v1.x remains the stable Python/Tkinter version.
 - Future larger UI work is still planned for Tauri v2.0.
-- The right-side preview is approximate and does not replace verification in
-  Makera Studio or an NC sender/viewer.
-- Makera profile maps 20% power to S0.2 and 40% power to S0.4.
-- GRBL profile maps 20% power to S200 and 40% power to S400.
-- Presets are starting points, not guaranteed safe machine settings.
-- Always preview generated .mks files in Makera Studio after Recalculate.
-- Always verify generic .nc files against your controller's S-value scale.
