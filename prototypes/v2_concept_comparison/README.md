@@ -2,7 +2,11 @@
 
 This folder contains two tracked, static v2 UI concepts for comparing future directions of the Laser Test Pattern Generator and a broader CNC/Laser companion app.
 
-Open either concept directly in a browser:
+Open the central launcher in a browser:
+
+- `index.html`
+
+Or open either concept directly:
 
 - `concept_a_program_shell/index.html`
 - `concept_b_workshop_companion/index.html`

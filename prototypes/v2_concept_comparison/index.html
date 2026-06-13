@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v2 Concept Comparison</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050713;
+      --panel: rgba(13, 19, 38, .78);
+      --panel-strong: rgba(17, 27, 54, .92);
+      --line: rgba(110, 175, 255, .22);
+      --text: #eaf3ff;
+      --muted: #91a8cb;
+      --blue: #55c9ff;
+      --green: #64e6bb;
+      --amber: #ffc05f;
+      --danger: #ff6b85;
+      --radius: 24px;
+      --shadow: 0 24px 90px rgba(0, 0, 0, .42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 82% 10%, rgba(85, 201, 255, .24), transparent 30%),
+        radial-gradient(circle at 10% 16%, rgba(139, 116, 255, .22), transparent 32%),
+        linear-gradient(135deg, #050713, #07162b 68%, #0b0715);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(110, 175, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(110, 175, 255, .035) 1px, transparent 1px);
+      background-size: 62px 62px;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page {
+      position: relative;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0;
+    }
+
+    .hero,
+    .card,
+    .section {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+    }
+
+    .hero {
+      padding: 34px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(38px, 7vw, 76px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      min-height: 300px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card:first-child {
+      border-color: rgba(85, 201, 255, .58);
+      background: linear-gradient(135deg, rgba(85, 201, 255, .14), rgba(13, 19, 38, .78));
+    }
+
+    .card:nth-child(2) {
+      border-color: rgba(100, 230, 187, .5);
+      background: linear-gradient(135deg, rgba(100, 230, 187, .12), rgba(13, 19, 38, .78));
+    }
+
+    .card span,
+    .section-label {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .card h2,
+    .section h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.12;
+    }
+
+    .card p,
+    .section p,
+    li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .button {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      min-height: 46px;
+      padding: 12px 16px;
+      border: 1px solid rgba(85, 201, 255, .58);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(85, 201, 255, .22), rgba(139, 116, 255, .14));
+      color: var(--text);
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      border-color: rgba(100, 230, 187, .72);
+      background: linear-gradient(135deg, rgba(100, 230, 187, .2), rgba(85, 201, 255, .14));
+    }
+
+    .section {
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .mini-panel,
+    .warning {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .045);
+      padding: 16px;
+    }
+
+    .mini-panel strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+
+    .check-list,
+    .question-list,
+    .scope-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .workflow-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      border: 1px solid rgba(100, 230, 187, .38);
+      border-radius: 999px;
+      background: rgba(100, 230, 187, .08);
+      padding: 10px 12px;
+      font-weight: 800;
+      color: #dffcf5;
+    }
+
+    .warning {
+      border-color: rgba(255, 192, 95, .42);
+      background: rgba(255, 192, 95, .08);
+    }
+
+    .warning strong {
+      color: #ffe1b3;
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        padding: 24px 0;
+      }
+
+      .hero,
+      .card,
+      .section {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .concept-grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>v2 Concept Comparison</h1>
+      <p>This is a static design study for comparing two possible v2 UI directions for the Laser Test Pattern Generator and a future CNC/Laser Companion.</p>
+    </section>
+
+    <section class="concept-grid" aria-label="Concept launch cards">
+      <article class="card">
+        <span>Concept A</span>
+        <h2>Desktop Program Shell</h2>
+        <p>A classic desktop app with modules, a left submenu, a central workflow area, and a right preview/status rail.</p>
+        <a class="button" href="concept_a_program_shell/index.html">Open Concept A</a>
+      </article>
+
+      <article class="card">
+        <span>Concept B</span>
+        <h2>Workshop Companion Command Center</h2>
+        <p>A job/workshop centered assistant with active jobs, helper tools, and material, machine, and safety context around the current task.</p>
+        <a class="button" href="concept_b_workshop_companion/index.html">Open Concept B</a>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="section-label">Active workflow comparison</span>
+        <h2>Test the same two active workflows in both concepts.</h2>
+      </div>
+      <div class="workflow-pills">
+        <span class="pill">Laser Test Pattern Generator</span>
+        <span class="pill">Parametric Design / Nameplate Generator</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="section-label">Passive/helper tools</span>
+        <h2>Helpers support the active job.</h2>
+        <p>Tools such as the V-bit Calculator, Safety Checklist, Material Journal, Cost Calculator, and SVG Detail Checker should help the current workflow. They are not the main workflow being tested.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="section-label">Tester checklist</span>
+        <h2>Suggested test order</h2>
+      </div>
+      <ol class="check-list">
+        <li>Open Concept A.</li>
+        <li>Find Laser Test Pattern.</li>
+        <li>Find Parametric Design / Nameplate.</li>
+        <li>Check whether the preview, status, and helper areas are understandable.</li>
+        <li>Open Concept B.</li>
+        <li>Repeat the same checks.</li>
+        <li>Compare which concept feels clearer, less overwhelming, and more useful as a future CNC/Laser Companion.</li>
+      </ol>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="section-label">Comparison questions</span>
+        <h2>Questions for reviewers</h2>
+      </div>
+      <div class="split">
+        <div class="mini-panel">
+          <strong>First impression</strong>
+          <ul class="question-list">
+            <li>Which concept is easier to understand at first glance?</li>
+            <li>Which concept feels less overwhelming?</li>
+            <li>Which concept would be better for non-technical users?</li>
+          </ul>
+        </div>
+        <div class="mini-panel">
+          <strong>Workflow fit</strong>
+          <ul class="question-list">
+            <li>Which concept makes it easier to find the Laser Test Pattern Generator?</li>
+            <li>Which concept makes it easier to find the Parametric Design / Nameplate workflow?</li>
+            <li>Which concept feels better for many future tools?</li>
+            <li>Which concept feels more like a workshop companion?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section warning">
+      <div class="section-head">
+        <span class="section-label">Scope warning</span>
+        <h2>Static prototype only</h2>
+      </div>
+      <ul class="scope-list">
+        <li>Static HTML/CSS/JS only.</li>
+        <li>No backend.</li>
+        <li>No real file generation.</li>
+        <li>No machine-control output.</li>
+        <li>No v1.x generator behavior changes.</li>
+        <li>No Tauri implementation yet.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
