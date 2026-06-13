@@ -45,6 +45,10 @@ jobs:
             --name "$APP_NAME" \
             --windowed \
             --onedir \
+            --osx-bundle-identifier "com.github.wdani.lasertestpatterngenerator" \
+            --add-data "templates:templates" \
+            --add-data "presets:presets" \
+            --add-data "docs:docs" \
             run_gui.py
 
       - name: Stage distributable package

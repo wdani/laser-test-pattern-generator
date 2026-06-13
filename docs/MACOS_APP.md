@@ -37,6 +37,36 @@ writes presets from the visible package folder.
 5. Open the extracted package folder.
 6. Double-click `LaserTestPatternGenerator.app`.
 
+You can also start the app from Terminal with:
+
+```bash
+open LaserTestPatternGenerator.app
+```
+
+or by running the bundled executable directly:
+
+```bash
+./LaserTestPatternGenerator.app/Contents/MacOS/LaserTestPatternGenerator
+```
+
+The app normalizes its startup working directory when launched from Finder,
+`open`, or the bundled executable. The package still keeps user-facing
+`templates/`, `presets/`, and `docs/` folders next to the `.app`, and the app
+also includes bundled fallback copies for Finder/App Translocation startup
+cases.
+
+## Startup Diagnostics
+
+If the experimental `.app` starts and exits immediately, check the startup log:
+
+```text
+~/Library/Logs/Laser Test Pattern Generator/startup.log
+```
+
+When startup fails inside the packaged app, the launcher writes traceback and
+environment details to that file. Please include this log when reporting macOS
+app launch problems.
+
 ## Gatekeeper Notes
 
 The experimental `.app` is unsigned and not notarized. macOS Gatekeeper may warn

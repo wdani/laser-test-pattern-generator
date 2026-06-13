@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from .paths import package_dir, sanitize_filename_part
+from .paths import resource_dir, sanitize_filename_part
 
 
 PRESET_METADATA_FIELDS = (
@@ -21,7 +21,7 @@ LEGACY_PRESET_NAME_FIELD = "_preset_name"
 
 
 def preset_dir() -> Path:
-    d = package_dir() / "presets"
+    d = resource_dir("presets")
     d.mkdir(exist_ok=True)
     return d
 
