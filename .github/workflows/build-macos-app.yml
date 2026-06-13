@@ -1,0 +1,100 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-macos-app:
+    name: Build macOS app
+    runs-on: macos-14
+
+    env:
+      APP_NAME: LaserTestPatternGenerator
+      PACKAGE_DIR: Laser_Test_Pattern_Generator_macos
+      ARTIFACT_NAME: Laser_Test_Pattern_Generator_macos_experimental_${{ github.run_number }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pyinstaller
+
+      - name: Compile main script
+        run: python -m py_compile makera_material_test_generator.py
+
+      - name: Compile GUI launcher
+        run: python -m py_compile run_gui.py
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+
+      - name: Build macOS app with PyInstaller
+        run: |
+          python -m PyInstaller \
+            --noconfirm \
+            --clean \
+            --name "$APP_NAME" \
+            --windowed \
+            --onedir \
+            run_gui.py
+
+      - name: Stage distributable package
+        run: |
+          stage_root="$PWD/package"
+          package_path="$stage_root/$PACKAGE_DIR"
+          rm -rf "$stage_root"
+          mkdir -p "$package_path"
+
+          cp -R "dist/$APP_NAME.app" "$package_path/"
+          cp "README.md" "$package_path/"
+          cp "LICENSE.txt" "$package_path/"
+          cp "CHANGELOG.md" "$package_path/"
+          cp "RELEASE_NOTES.txt" "$package_path/"
+          cp -R "docs" "$package_path/"
+          cp -R "templates" "$package_path/"
+          cp -R "presets" "$package_path/"
+
+          required_paths=(
+            "$package_path/$APP_NAME.app"
+            "$package_path/templates"
+            "$package_path/presets"
+            "$package_path/docs"
+            "$package_path/README.md"
+            "$package_path/LICENSE.txt"
+            "$package_path/CHANGELOG.md"
+            "$package_path/RELEASE_NOTES.txt"
+          )
+
+          for path in "${required_paths[@]}"; do
+            if [ ! -e "$path" ]; then
+              echo "Missing expected package path: $path" >&2
+              exit 1
+            fi
+          done
+
+          app_executable="$package_path/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+          if [ ! -x "$app_executable" ]; then
+            echo "App executable is not executable: $app_executable" >&2
+            exit 1
+          fi
+
+      - name: Archive macOS app package
+        run: |
+          mkdir -p dist
+          tar -czf "dist/$ARTIFACT_NAME.tar.gz" -C package "$PACKAGE_DIR"
+          test -f "dist/$ARTIFACT_NAME.tar.gz"
+
+      - name: Upload macOS app package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: dist/${{ env.ARTIFACT_NAME }}.tar.gz

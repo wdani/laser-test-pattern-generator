@@ -30,6 +30,21 @@ It is meant to be practical and beginner-friendly.
 - Expect a Windows SmartScreen or unsigned-build warning because the
   experimental executable is not code-signed.
 
+## macOS App Package Check
+
+- Download and extract the macOS app artifact.
+- Extract the contained `.tar.gz` package archive. It is used to preserve
+  executable permissions inside the `.app` bundle.
+- Confirm `LaserTestPatternGenerator.app` is present.
+- Confirm `templates/`, `presets/`, and `docs/` are present next to the `.app`.
+- Confirm README, license, changelog, and release notes are included.
+- Open the `.app` if macOS allows it.
+- Expect a Gatekeeper or unidentified-developer warning because the
+  experimental `.app` is unsigned and not notarized.
+- If macOS blocks the `.app`, confirm the Python/source fallback still works:
+  - `python3 run_gui.py`
+  - `python3 makera_material_test_generator.py --gui`
+
 ## Source Package Check
 
 - Confirm `python run_gui.py` starts the GUI.
@@ -59,6 +74,7 @@ It is meant to be practical and beginner-friendly.
 - Confirm release asset naming is clear and consistent.
 - Confirm Windows ZIP assets, if present, are not ZIP-inside-ZIP workflow
   artifacts.
+- Confirm macOS app artifacts, if present, are clearly marked experimental.
 
 ## After Release
 

@@ -10,9 +10,10 @@ Generate laser material test patterns for **Makera Studio (`.mks`)** and
 
 The current release is **v1.6.3**.
 
-This is a cross-platform Python/Tkinter tool. The included `.bat` file and
-experimental `.exe` builds are Windows-only convenience launchers; the generator
-itself runs from Python on Windows, Linux, and macOS.
+This is a cross-platform Python/Tkinter tool. The included `.bat` file,
+experimental Windows `.exe` builds, and experimental macOS `.app` builds are
+convenience launchers; the generator itself runs from Python on Windows, Linux,
+and macOS.
 
 For detailed installation and startup help, see
 [docs/INSTALLATION.md](docs/INSTALLATION.md).
@@ -100,6 +101,12 @@ Python/Tkinter remains the primary supported version for now;
 the package includes an `_internal` runtime folder that must stay next to the
 `.exe`. A Windows ZIP may be available under GitHub Releases; see
 [docs/WINDOWS_EXE.md](docs/WINDOWS_EXE.md).
+
+## macOS App Builds
+
+macOS app builds are experimental and generated through GitHub Actions. The app
+is unsigned and not notarized, so Python/source startup remains the recommended
+fallback; see [docs/MACOS_APP.md](docs/MACOS_APP.md).
 
 ## Recommended First Test
 
