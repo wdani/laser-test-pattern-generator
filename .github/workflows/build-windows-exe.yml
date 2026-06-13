@@ -99,6 +99,9 @@ jobs:
             }
           }
 
+      - name: Verify release package
+        run: python scripts/verify_release_package.py package/${{ env.PACKAGE_DIR }}
+
       - name: Create release ZIP
         if: github.ref_type == 'tag'
         shell: pwsh
