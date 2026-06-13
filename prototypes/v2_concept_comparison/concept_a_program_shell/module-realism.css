@@ -342,6 +342,34 @@
   color: #dcecff;
 }
 
+.language-switch {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid rgba(83, 199, 255, .34);
+  border-radius: 999px;
+  background: rgba(83, 199, 255, .08);
+}
+
+.language-switch button {
+  min-height: 36px;
+  border: 0;
+  border-right: 1px solid rgba(83, 199, 255, .2);
+  padding: 0 11px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.language-switch button:last-child {
+  border-right: 0;
+}
+
+.language-switch button.active {
+  background: rgba(83, 199, 255, .18);
+  color: var(--text);
+}
+
 .decision-strip {
   display: flex;
   flex-wrap: wrap;
