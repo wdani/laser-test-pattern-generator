@@ -91,10 +91,13 @@ def job_manifest_data(
             "scan_angle": settings.scan_angle,
             "labels_enabled": bool(settings.labels_enabled),
             "language": settings.language,
+            "nc_flavor": settings.nc_flavor,
             "nc_power_profile": settings.nc_power_profile,
             "nc_s_max": settings.nc_s_max,
             "nc_units": settings.nc_units,
             "nc_include_labels": bool(settings.nc_include_labels),
+            "z_offset": settings.z_offset,
+            "indent_distance": settings.indent_distance,
         },
     }
 

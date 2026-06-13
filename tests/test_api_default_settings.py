@@ -111,11 +111,14 @@ def test_default_settings_contains_generation_relevant_fields():
         "round_speed_values",
         "round_power_values",
         "template_dir",
+        "nc_flavor",
         "nc_power_profile",
         "nc_s_max",
         "nc_units",
         "nc_include_labels",
         "write_manifest",
+        "z_offset",
+        "indent_distance",
     }
 
     missing_keys = expected_keys - set(data)

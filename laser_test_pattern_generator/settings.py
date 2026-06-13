@@ -21,6 +21,12 @@ NC_POWER_PROFILES: Dict[str, Optional[float]] = {
 }
 DEFAULT_NC_POWER_PROFILE = "Makera (0-1)"
 
+NC_FLAVORS = {
+    "generic": "Generic",
+    "makera-studio": "Makera Studio",
+}
+DEFAULT_NC_FLAVOR = "generic"
+
 
 @dataclass
 class GeneratorSettings:
@@ -63,9 +69,12 @@ class GeneratorSettings:
     speed_axis_text_height: float = 2.2
     speed_number_text_height: float = 2.4
     template_dir: Optional[Path] = None
+    nc_flavor: str = DEFAULT_NC_FLAVOR
     nc_power_profile: str = DEFAULT_NC_POWER_PROFILE
     nc_s_max: float = 1.0
     nc_units: str = "mm"
     nc_include_labels: bool = True
     write_manifest: bool = False
+    z_offset: float = 0.0
+    indent_distance: float = 0.0
 

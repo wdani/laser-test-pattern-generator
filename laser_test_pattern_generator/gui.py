@@ -17,6 +17,7 @@ except Exception:
 
 from .generator_mks import generate_mks
 from .generator_nc import fmt_num, generate_generic_nc, profile_for_nc_s_max
+from .generator_nc_makera import generate_makera_studio_nc
 from .geometry import computed_layout, linspace, validate_layout
 from .job_manifest import write_job_manifest
 from .paths import expected_output_suffix_for_format, sync_output_suffix_for_format
@@ -37,6 +38,7 @@ from .settings import (
     DEFAULT_NC_POWER_PROFILE,
     GeneratorSettings,
     LASER_MODES,
+    NC_FLAVORS,
     NC_POWER_PROFILES,
 )
 from .update_check import (
@@ -109,6 +111,9 @@ THEME_PALETTES = {
         "tooltip_text": "#f3f4f6",
     },
 }
+
+NC_FLAVOR_LABELS = {value: label for value, label in NC_FLAVORS.items()}
+NC_FLAVOR_VALUES = {label: value for value, label in NC_FLAVORS.items()}
 
 
 class Tooltip:
@@ -719,22 +724,29 @@ class GeneratorGui:
         self._entry(tile, "Line interval (mm)", "line_interval", "0.10", 0, 2, tooltip="Spacing between fill lines or offset contours.", spin=True, from_=0.01, to=10, increment=0.01, format_="%.2f")
         self._entry(tile, "Passes", "passes", "1", 1, 0, tooltip="Repeat each tile pattern this many times.", spin=True, from_=1, to=20, increment=1)
         self._entry(tile, "Scan angle", "scan_angle", "0", 1, 2, tooltip="Fill-line angle in degrees for Fill mode.", spin=True, from_=-180, to=180, increment=5)
+        self._entry(tile, "Indent distance", "indent_distance", "0.0", 2, 2, tooltip="Makera Studio NC Fill/Offset Fill inset distance.", spin=True, from_=0, to=100, increment=0.1)
+        self._entry(tile, "Z Offset", "z_offset", "0.0", 3, 2, tooltip="Stored as a setting. Makera Studio NC direct output keeps G0 Z0 for observed parity.", spin=True, from_=-100, to=100, increment=0.1)
         self.vars["bidirectional"] = tk.BooleanVar(value=True)
         bidirectional = ttk.Checkbutton(tile, text="Bi-directional Fill", variable=self.vars["bidirectional"])
         bidirectional.grid(row=2, column=0, columnspan=2, sticky="w", padx=6, pady=4)
         self._tooltip(bidirectional, "Fill mode alternates scan direction between lines.")
-        self._hint(tile, "Mode hints: Line = outline, Fill = scan lines, Offset Fill = contour-like fill.", 3)
+        self._hint(tile, "Mode hints: Line = outline, Fill = scan lines, Offset Fill = contour-like fill. Indent/Z Offset are experimental Makera Studio parity settings.", 4)
 
-        nc = ttk.LabelFrame(f, text="Generic NC power scale")
+        nc = ttk.LabelFrame(f, text="NC output")
         nc.grid(row=1, column=0, sticky="we", padx=2, pady=(0, 10))
-        ttk.Label(nc, text="NC power profile").grid(row=0, column=0, sticky="w", padx=6, pady=4)
+        ttk.Label(nc, text="NC flavor").grid(row=0, column=0, sticky="w", padx=6, pady=4)
+        self.vars["nc_flavor"] = tk.StringVar(value=NC_FLAVOR_LABELS["generic"])
+        flavor_combo = ttk.Combobox(nc, textvariable=self.vars["nc_flavor"], values=list(NC_FLAVOR_VALUES), state="readonly", width=18)
+        flavor_combo.grid(row=0, column=1, sticky="w", padx=6, pady=4)
+        self._tooltip(flavor_combo, "Generic is controller-neutral. Makera Studio is experimental and follows observed new Makera Studio NC export style.")
         self.vars["nc_power_profile"] = tk.StringVar(value=DEFAULT_NC_POWER_PROFILE)
         profile_combo = ttk.Combobox(nc, textvariable=self.vars["nc_power_profile"], values=list(NC_POWER_PROFILES), state="readonly", width=18)
-        profile_combo.grid(row=0, column=1, sticky="w", padx=6, pady=4)
+        profile_combo.grid(row=1, column=1, sticky="w", padx=6, pady=4)
+        ttk.Label(nc, text="NC power profile").grid(row=1, column=0, sticky="w", padx=6, pady=4)
         profile_combo.bind("<<ComboboxSelected>>", lambda _event: self._sync_nc_s_max_from_profile())
         self._tooltip(profile_combo, "Select the S-value scale your NC controller expects.")
-        self._entry(nc, "NC S max", "nc_s_max", "1", 1, 0, tooltip="Maximum laser S value for generic NC output. Custom keeps manual input.", spin=True, from_=0, to=100000, increment=0.1)
-        self._hint(nc, "Generic NC only: Makera uses S0.0-S1.0; GRBL often uses S0-S1000; 8-bit uses S0-S255.", 2)
+        self._entry(nc, "NC S max", "nc_s_max", "1", 2, 0, tooltip="Maximum laser S value for NC output. Custom keeps manual input.", spin=True, from_=0, to=100000, increment=0.1)
+        self._hint(nc, "Generic NC is controller-neutral. Makera Studio NC is experimental and must still be previewed/verified before machine use.", 3)
 
     def _build_labels_tab(self):
         f = self.tab_labels
@@ -932,10 +944,18 @@ class GeneratorGui:
             if key in ("preset_name", "ui_theme", "update_check_on_startup"):
                 continue
             try:
-                data[key] = var.get()
+                data[key] = self._nc_flavor_value() if key == "nc_flavor" else var.get()
             except Exception:
                 pass
         return data
+
+    def _nc_flavor_value(self) -> str:
+        value = self.vars["nc_flavor"].get()
+        return NC_FLAVOR_VALUES.get(value, value)
+
+    def _nc_flavor_display(self, value: object) -> str:
+        text = str(value or "generic")
+        return NC_FLAVOR_LABELS.get(text, text)
 
     def _apply_preset_data(self, data: Dict[str, object]) -> None:
         for key in PRESET_METADATA_FIELDS:
@@ -949,7 +969,7 @@ class GeneratorGui:
                 continue
             if key in self.vars:
                 try:
-                    self.vars[key].set(value)
+                    self.vars[key].set(self._nc_flavor_display(value) if key == "nc_flavor" else value)
                 except Exception:
                     pass
         if "nc_power_profile" not in data and "nc_s_max" in data and "nc_power_profile" in self.vars:
@@ -1240,8 +1260,11 @@ class GeneratorGui:
             stock_z=f("stock_z"),
             round_speed_values=bool(self.vars["round_speed_values"].get()),
             round_power_values=bool(self.vars["round_power_values"].get()),
+            nc_flavor=self._nc_flavor_value(),
             nc_power_profile=self.vars["nc_power_profile"].get(),
             nc_s_max=f("nc_s_max"),
+            z_offset=f("z_offset"),
+            indent_distance=f("indent_distance"),
             write_manifest=bool(self.vars["write_manifest"].get()),
         )
 
@@ -1272,7 +1295,10 @@ class GeneratorGui:
             if settings.output_format in ("MKS", "Both"):
                 infos.append(generate_mks(copy.deepcopy(settings)))
             if settings.output_format in ("NC", "Both"):
-                infos.append(generate_generic_nc(copy.deepcopy(settings)))
+                if settings.nc_flavor == "makera-studio":
+                    infos.append(generate_makera_studio_nc(copy.deepcopy(settings)))
+                else:
+                    infos.append(generate_generic_nc(copy.deepcopy(settings)))
 
             manifest_info = None
             if settings.write_manifest:
@@ -1281,7 +1307,7 @@ class GeneratorGui:
             for info in infos:
                 self._log("Created: " + info["output"])
                 if info.get("format") == "NC":
-                    self._log(f"NC lines: {info['lines']} | Tiles: {info['tiles']} | Profile: {info['power_profile']} | S max: {info['s_max']}")
+                    self._log(f"NC lines: {info['lines']} | Tiles: {info['tiles']} | Flavor: {info.get('nc_flavor', 'generic')} | Profile: {info['power_profile']} | S max: {info['s_max']}")
                 else:
                     self._log(f"Paths: {info['paths']} | Shapes: {info['shapes']} | Labels: {info['label_shapes']} | Tiles: {info['tile_shapes']}")
                 self._log("Speed top -> bottom: " + ", ".join(self._display_value(x) for x in info["speeds_visual_top_to_bottom"]))

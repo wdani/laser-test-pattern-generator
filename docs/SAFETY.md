@@ -25,6 +25,10 @@ laser power scales:
 
 Set **NC S max** correctly and always preview the file in your sender/CAM before use.
 
+For the default generic NC flavor and the experimental Makera Studio-style NC
+flavor, see [NC_OUTPUT_FLAVORS.md](NC_OUTPUT_FLAVORS.md). Both produce
+machine-control output and must be verified before real use.
+
 ## General Laser Safety
 
 - Start with conservative power and speed settings for unknown materials.
