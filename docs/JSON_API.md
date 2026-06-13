@@ -28,6 +28,7 @@ normal command-line workflow.
 | `preview` | No | Calculate a read-only layout preview from CLI settings. |
 | `generate` | Yes | Generate MKS/NC output files and return machine-readable results. |
 | `log-result` | Yes | Append one material test observation to a local JSONL log. |
+| `preflight-checklist` | No | Return a reusable laser safety preflight checklist. |
 
 ## JSON Config Files
 
@@ -354,12 +355,69 @@ Intended frontend usage:
 - Keep material result logging local and file-based.
 - Treat this as a foundation, not a full material database.
 
+## preflight-checklist
+
+Example:
+
+```bash
+python makera_material_test_generator.py --api preflight-checklist
+```
+
+Writes files: No.
+
+Purpose:
+
+Returns a simple laser safety preflight checklist with stable item IDs. This is
+a reminder/checklist foundation, not a guarantee of safety and not a blocking
+workflow.
+
+Important JSON fields:
+
+- `schema_version`
+- `api_command`
+- `checklist_name`
+- `checklist_version`
+- `items`
+- `items[].id`
+- `items[].label`
+- `items[].description`
+- `items[].category`
+- `items[].required`
+- `items[].applies_to`
+
+Response shape:
+
+```json
+{
+  "schema_version": 1,
+  "api_command": "preflight-checklist",
+  "checklist_name": "Laser Safety Preflight Checklist",
+  "checklist_version": "1.0",
+  "items": [
+    {
+      "id": "material_laser_safe",
+      "label": "Material is laser-safe",
+      "category": "material",
+      "required": true,
+      "applies_to": ["all"]
+    }
+  ]
+}
+```
+
+Intended frontend usage:
+
+- Show a non-blocking safety/setup checklist before users run generated files.
+- Filter or highlight items by `applies_to` for MKS, NC, or Both workflows.
+- Avoid duplicating checklist labels and IDs in future UI/frontend code.
+
 ## Frontend Architecture Guidance
 
 - The Python backend and JSON CLI API are the source of truth.
 - Future Tauri v2.0 or companion frontends should call the JSON CLI API.
 - Frontends should initialize controls from `default-settings`.
 - Frontends should use `preview` for safe, read-only layout feedback.
+- Frontends can use `preflight-checklist` for read-only safety/setup reminders.
 - Frontends should call `generate` only when the user intentionally wants files
   written.
 - Frontends can call `log-result` after real-world testing to record

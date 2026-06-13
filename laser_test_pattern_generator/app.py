@@ -20,6 +20,7 @@ from .material_log import (
     append_material_result,
     build_material_result_entry,
 )
+from .safety_preflight import CHECKLIST_NAME, CHECKLIST_VERSION, safety_preflight_items
 from .settings import (
     APP_VERSION,
     DEFAULT_NC_POWER_PROFILE,
@@ -30,7 +31,14 @@ from .settings import (
 
 API_SCHEMA_VERSION = 1
 APP_NAME = "Laser Test Pattern Generator"
-AVAILABLE_API_COMMANDS = ["app-info", "default-settings", "preview", "generate", "log-result"]
+AVAILABLE_API_COMMANDS = [
+    "app-info",
+    "default-settings",
+    "preview",
+    "generate",
+    "log-result",
+    "preflight-checklist",
+]
 PLANNED_API_COMMANDS = []
 CONFIG_API_COMMANDS = {"preview", "generate"}
 
@@ -312,6 +320,18 @@ def settings_to_api_defaults(settings: GeneratorSettings) -> dict:
     return data
 
 
+def preflight_checklist_response() -> dict:
+    return {
+        "schema_version": API_SCHEMA_VERSION,
+        "api_command": "preflight-checklist",
+        "app_name": APP_NAME,
+        "app_version": APP_VERSION,
+        "checklist_name": CHECKLIST_NAME,
+        "checklist_version": CHECKLIST_VERSION,
+        "items": api_json_value(safety_preflight_items()),
+    }
+
+
 def rounded_axis_values(start: float, end: float, count: int, should_round: bool) -> list:
     values = linspace(start, end, count)
     if should_round:
@@ -458,6 +478,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.api == "default-settings":
         settings = settings_from_args(parse_args([]))
         print(json.dumps(settings_to_api_defaults(settings), indent=2))
+        return 0
+
+    if args.api == "preflight-checklist":
+        print(json.dumps(preflight_checklist_response(), indent=2))
         return 0
 
     if args.api == "preview":

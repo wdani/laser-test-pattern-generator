@@ -3,6 +3,9 @@
 This project generates laser test patterns. Always verify generated files before
 running a laser.
 
+For a reusable reminder checklist, see
+[PREFLIGHT_CHECKLIST.md](PREFLIGHT_CHECKLIST.md).
+
 ## For Makera Studio `.mks`
 
 1. Open the generated `.mks`.

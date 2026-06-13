@@ -63,6 +63,7 @@ from .settings import (
     LASER_MODES,
     NC_POWER_PROFILES,
 )
+from .safety_preflight import CHECKLIST_NAME, CHECKLIST_VERSION, safety_preflight_items
 from .ui_settings import (
     DEFAULT_UI_THEME,
     THEME_CHOICES,
@@ -87,6 +88,8 @@ __all__ = [
     "add_bar_for_segment",
     "apply_auto_position",
     "build_auto_filename",
+    "CHECKLIST_NAME",
+    "CHECKLIST_VERSION",
     "computed_layout",
     "default_template_dir",
     "default_ui_settings_path",
@@ -136,6 +139,7 @@ __all__ = [
     "save_preset_data",
     "save_ui_settings",
     "scheme_for_path",
+    "safety_preflight_items",
     "settings_from_args",
     "set_stock_size",
     "sync_output_suffix_for_format",

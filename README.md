@@ -28,8 +28,8 @@ For detailed installation and startup help, see
 - Generic NC power profiles for Makera, GRBL, 8-bit, and custom S-value scales.
 - Metadata comments in generated generic `.nc` files for easier verification.
 - JSON CLI backend API for future automation, tooling, and UI/frontend work:
-  `--api app-info`, `--api default-settings`, `--api preview`, and
-  `--api generate`.
+  `--api app-info`, `--api default-settings`, `--api preview`,
+  `--api generate`, `--api log-result`, and `--api preflight-checklist`.
 - JSON config-file workflow for API preview/generate commands, with example
   configs under `examples/api/`.
 - English GUI.
@@ -46,6 +46,8 @@ For detailed installation and startup help, see
 - Optional JSON job manifest next to generated output files for reproducibility.
 - Local JSONL material result log foundation for recording real-world test
   observations.
+- Read-only laser safety preflight checklist foundation for future UI/frontend
+  integration.
 - Approximate preview tab plus automatic preview refresh after generation,
   preset loading, tab changes, and key layout edits.
 - In the GUI, the output filename extension follows the selected format where
@@ -178,6 +180,15 @@ python makera_material_test_generator.py --log-result --material-name cork --res
 
 See [docs/MATERIAL_RESULTS.md](docs/MATERIAL_RESULTS.md) for the JSONL result
 log format and API usage.
+
+Get a read-only laser safety preflight checklist:
+
+```bash
+python makera_material_test_generator.py --api preflight-checklist
+```
+
+See [docs/PREFLIGHT_CHECKLIST.md](docs/PREFLIGHT_CHECKLIST.md) for the checklist
+notes and safety reminders.
 
 ## Repository Layout
 
