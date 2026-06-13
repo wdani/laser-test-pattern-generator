@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v2 Concept Feedback</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050713;
+      --panel: rgba(13, 19, 38, .78);
+      --line: rgba(110, 175, 255, .22);
+      --text: #eaf3ff;
+      --muted: #91a8cb;
+      --blue: #55c9ff;
+      --green: #64e6bb;
+      --amber: #ffc05f;
+      --radius: 24px;
+      --shadow: 0 24px 90px rgba(0, 0, 0, .42);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 82% 10%, rgba(85, 201, 255, .24), transparent 30%),
+        radial-gradient(circle at 10% 16%, rgba(139, 116, 255, .22), transparent 32%),
+        linear-gradient(135deg, #050713, #07162b 68%, #0b0715);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(110, 175, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(110, 175, 255, .035) 1px, transparent 1px);
+      background-size: 62px 62px;
+    }
+
+    a { color: inherit; }
+
+    .page {
+      position: relative;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0;
+    }
+
+    .hero,
+    .section {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+    }
+
+    .hero {
+      padding: 34px;
+      margin-bottom: 18px;
+    }
+
+    .utility-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .status-badge,
+    .language-switch {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(85, 201, 255, .36);
+      border-radius: 999px;
+      background: rgba(85, 201, 255, .09);
+      color: #dff3ff;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .status-badge {
+      min-height: 38px;
+      padding: 0 13px;
+    }
+
+    .language-switch {
+      overflow: hidden;
+    }
+
+    .language-switch button {
+      min-height: 38px;
+      border: 0;
+      border-right: 1px solid rgba(85, 201, 255, .24);
+      padding: 0 12px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .language-switch button:last-child { border-right: 0; }
+
+    .language-switch button.active {
+      background: rgba(85, 201, 255, .18);
+      color: var(--text);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(34px, 6vw, 68px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+
+    .hero p,
+    .section p,
+    li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero p {
+      max-width: 820px;
+      margin: 18px 0 0;
+      font-size: 18px;
+    }
+
+    .quick-links,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .button,
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 11px 15px;
+      border: 1px solid rgba(85, 201, 255, .58);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(85, 201, 255, .22), rgba(139, 116, 255, .14));
+      color: var(--text);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .button:hover,
+    button:hover {
+      transform: translateY(-2px);
+      border-color: rgba(100, 230, 187, .72);
+      background: linear-gradient(135deg, rgba(100, 230, 187, .2), rgba(85, 201, 255, .14));
+    }
+
+    .section {
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .section-label {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    h2 { font-size: 30px; }
+
+    .field-grid,
+    .written-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label,
+    .field-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(5, 10, 24, .56);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    input,
+    select {
+      min-height: 46px;
+      padding: 10px 12px;
+    }
+
+    select option { background: #10182e; }
+
+    textarea {
+      min-height: 116px;
+      padding: 12px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .rating-table {
+      display: grid;
+      gap: 8px;
+    }
+
+    .rating-row,
+    .rating-head {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 140px 140px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .rating-head {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      padding: 0 12px 4px;
+    }
+
+    .rating-row {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .045);
+      padding: 12px;
+    }
+
+    .rating-row strong { overflow-wrap: anywhere; }
+
+    .recommendation-options {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .radio-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .045);
+      padding: 14px;
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text);
+    }
+
+    .radio-card input {
+      width: auto;
+      min-height: 0;
+      margin-right: 8px;
+    }
+
+    #markdownOutput {
+      min-height: 360px;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 13px;
+    }
+
+    .status {
+      min-height: 22px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .warning {
+      border-color: rgba(255, 192, 95, .42);
+      background: rgba(255, 192, 95, .08);
+    }
+
+    .scope-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        padding: 24px 0;
+      }
+
+      .hero,
+      .section {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .field-grid,
+      .written-grid,
+      .recommendation-options {
+        grid-template-columns: 1fr;
+      }
+
+      .rating-head { display: none; }
+      .rating-row { grid-template-columns: 1fr; }
+      .utility-row { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="utility-row">
+        <span class="status-badge" data-i18n="localBadge">Local in browser</span>
+        <div class="language-switch" data-language-switch aria-label="Language selection">
+          <button type="button" data-lang="de">DE</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+      </div>
+      <h1 data-i18n="title">v2 Concept Feedback</h1>
+      <p data-i18n="heroCopy">This form collects structured feedback for Concept A and Concept B. It runs locally in your browser, uploads nothing, and saves nothing automatically. You can generate, copy, or download feedback; the downloaded file is Markdown.</p>
+      <nav class="quick-links" aria-label="Quick links">
+        <a class="button" href="concept_a_program_shell/index.html" data-i18n="openA">Open Concept A</a>
+        <a class="button" href="concept_b_workshop_companion/index.html" data-i18n="openB">Open Concept B</a>
+        <a class="button" href="index.html" data-i18n="overview">Back to overview</a>
+      </nav>
+    </section>
+
+    <form id="feedbackForm">
+      <section class="section">
+        <div class="section-head">
+          <span class="section-label" data-i18n="contextLabel">Tester context</span>
+          <h2 data-i18n="contextTitle">Who is testing on which screen?</h2>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="testerName" data-i18n="nameLabel">Name / alias</label>
+            <input id="testerName" name="testerName" autocomplete="name" data-i18n-placeholder="namePlaceholder" placeholder="Example: Daniel">
+          </div>
+          <div class="field">
+            <label for="deviceInfo" data-i18n="deviceLabel">Device / screen size</label>
+            <input id="deviceInfo" name="deviceInfo" data-i18n-placeholder="devicePlaceholder" placeholder="Example: 14 inch laptop, 1920 x 1200">
+          </div>
+          <div class="field">
+            <label for="testDate" data-i18n="dateLabel">Date</label>
+            <input id="testDate" name="testDate" type="date">
+          </div>
+          <div class="field full">
+            <label for="firstImpression" data-i18n="firstImpressionLabel">First impression</label>
+            <textarea id="firstImpression" name="firstImpression" data-i18n-placeholder="firstImpressionPlaceholder" placeholder="What stands out first? What feels clear, what feels confusing?"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <span class="section-label" data-i18n="ratingLabel">Rating</span>
+          <h2 data-i18n="ratingTitle">Rate Concept A and Concept B from 1 to 5.</h2>
+          <p data-i18n="ratingHelp">1 means weak or confusing. 5 means strong or clear.</p>
+        </div>
+        <div class="rating-table" id="ratingTable">
+          <div class="rating-head" aria-hidden="true">
+            <span data-i18n="criterionHead">Criterion</span>
+            <span>Concept A</span>
+            <span>Concept B</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <span class="section-label" data-i18n="writtenLabel">Written feedback</span>
+          <h2 data-i18n="writtenTitle">What should stay, what is confusing, what is missing?</h2>
+        </div>
+        <div class="written-grid" id="writtenFields"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <span class="section-label" data-i18n="recommendationLabel">Final recommendation</span>
+          <h2 data-i18n="recommendationTitle">Which direction is strongest right now?</h2>
+        </div>
+        <div class="recommendation-options" id="recommendationOptions"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <span class="section-label" data-i18n="exportLabel">Feedback export</span>
+          <h2 data-i18n="exportTitle">Generate, copy, or download feedback.</h2>
+          <p data-i18n="exportHelp">The summary is created only in your browser. Nothing is automatically stored or uploaded. The downloaded file is a Markdown file so it can be read in GitHub, editors, or plain text tools.</p>
+        </div>
+        <div class="action-row">
+          <button type="button" id="generateMarkdown" data-i18n="generateFeedback">Generate feedback</button>
+          <button type="button" id="copyMarkdown" data-i18n="copyFeedback">Copy feedback</button>
+          <button type="button" id="downloadMarkdown" data-i18n="downloadFeedback">Download feedback</button>
+        </div>
+        <p class="status" id="copyStatus" aria-live="polite"></p>
+        <div class="field">
+          <label for="markdownOutput" data-i18n="previewLabel">Feedback preview</label>
+          <textarea id="markdownOutput" spellcheck="false" data-i18n-placeholder="previewPlaceholder" placeholder="After filling out the form: Generate feedback."></textarea>
+        </div>
+      </section>
+    </form>
+
+    <section class="section warning">
+      <div class="section-head">
+        <span class="section-label" data-i18n="privacyLabel">Private / local</span>
+        <h2 data-i18n="privacyTitle">Local in browser. Nothing is sent.</h2>
+      </div>
+      <ul class="scope-list">
+        <li data-i18n="limit1">Static prototype with HTML/CSS/JS.</li>
+        <li data-i18n="limit2">No backend.</li>
+        <li data-i18n="limit3">No network connection.</li>
+        <li data-i18n="limit4">No upload and no tracking.</li>
+        <li data-i18n="limit5">Nothing is saved automatically.</li>
+        <li data-i18n="limit6">No machine files and no machine output.</li>
+        <li data-i18n="limit7">No change to v1.x generator behavior.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="assets/i18n.js"></script>
+  <script>
+    (() => {
+      const translations = {
+        en: {
+          contextLabel: "Tester context",
+          contextTitle: "Who is testing on which screen?",
+          copyFeedback: "Copy feedback",
+          criterionHead: "Criterion",
+          dateLabel: "Date",
+          deviceLabel: "Device / screen size",
+          devicePlaceholder: "Example: 14 inch laptop, 1920 x 1200",
+          downloadFeedback: "Download feedback",
+          exportHelp: "The summary is created only in your browser. Nothing is automatically stored or uploaded. The downloaded file is a Markdown file so it can be read in GitHub, editors, or plain text tools.",
+          exportLabel: "Feedback export",
+          exportTitle: "Generate, copy, or download feedback.",
+          firstImpressionLabel: "First impression",
+          firstImpressionPlaceholder: "What stands out first? What feels clear, what feels confusing?",
+          generateFeedback: "Generate feedback",
+          heroCopy: "This form collects structured feedback for Concept A and Concept B. It runs locally in your browser, uploads nothing, and saves nothing automatically. You can generate, copy, or download feedback; the downloaded file is Markdown.",
+          limit1: "Static prototype with HTML/CSS/JS.",
+          limit2: "No backend.",
+          limit3: "No network connection.",
+          limit4: "No upload and no tracking.",
+          limit5: "Nothing is saved automatically.",
+          limit6: "No machine files and no machine output.",
+          limit7: "No change to v1.x generator behavior.",
+          localBadge: "Local in browser",
+          nameLabel: "Name / alias",
+          namePlaceholder: "Example: Daniel",
+          openA: "Open Concept A",
+          openB: "Open Concept B",
+          overview: "Back to overview",
+          previewLabel: "Feedback preview",
+          previewPlaceholder: "After filling out the form: Generate feedback.",
+          privacyLabel: "Private / local",
+          privacyTitle: "Local in browser. Nothing is sent.",
+          ratingHelp: "1 means weak or confusing. 5 means strong or clear.",
+          ratingLabel: "Rating",
+          ratingTitle: "Rate Concept A and Concept B from 1 to 5.",
+          recommendationLabel: "Final recommendation",
+          recommendationTitle: "Which direction is strongest right now?",
+          title: "v2 Concept Feedback",
+          writtenLabel: "Written feedback",
+          writtenTitle: "What should stay, what is confusing, what is missing?"
+        },
+        de: {
+          contextLabel: "Tester-Kontext",
+          contextTitle: "Wer testet auf welchem Bildschirm?",
+          copyFeedback: "Feedback kopieren",
+          criterionHead: "Kriterium",
+          dateLabel: "Datum",
+          deviceLabel: "Ger&auml;t / Bildschirmgr&ouml;&szlig;e",
+          devicePlaceholder: "Beispiel: 14 Zoll Laptop, 1920 x 1200",
+          downloadFeedback: "Feedback herunterladen",
+          exportHelp: "Die Zusammenfassung entsteht nur lokal im Browser. Es wird nichts automatisch gespeichert oder hochgeladen. Der Download ist eine Markdown-Datei, die in GitHub, Editoren oder einfachen Textprogrammen gelesen werden kann.",
+          exportLabel: "Feedback Export",
+          exportTitle: "Feedback erzeugen, kopieren oder herunterladen.",
+          firstImpressionLabel: "Erster Eindruck",
+          firstImpressionPlaceholder: "Was f&auml;llt zuerst auf? Was wirkt klar, was verwirrend?",
+          generateFeedback: "Feedback erzeugen",
+          heroCopy: "Dieses Formular sammelt strukturiertes Feedback zu Concept A und Concept B. Es l&auml;uft lokal im Browser, l&auml;dt nichts hoch und speichert nichts automatisch. Du kannst Feedback erzeugen, kopieren oder herunterladen; der Download ist eine Markdown-Datei.",
+          limit1: "Statischer Prototyp mit HTML/CSS/JS.",
+          limit2: "Kein Backend.",
+          limit3: "Keine Netzwerkverbindung.",
+          limit4: "Kein Upload und kein Tracking.",
+          limit5: "Es wird nichts automatisch gespeichert.",
+          limit6: "Keine Maschinendateien und kein Maschinen-Output.",
+          limit7: "Keine &Auml;nderung am v1.x Generatorverhalten.",
+          localBadge: "Lokal im Browser",
+          nameLabel: "Name / Alias",
+          namePlaceholder: "Beispiel: Daniel",
+          openA: "Konzept A &ouml;ffnen",
+          openB: "Konzept B &ouml;ffnen",
+          overview: "Zur &Uuml;bersicht",
+          previewLabel: "Feedback Vorschau",
+          previewPlaceholder: "Nach dem Ausf&uuml;llen: Feedback erzeugen.",
+          privacyLabel: "Privat / Lokal",
+          privacyTitle: "Lokal im Browser. Es wird nichts gesendet.",
+          ratingHelp: "1 bedeutet schwach oder verwirrend. 5 bedeutet stark oder klar.",
+          ratingLabel: "Bewertung",
+          ratingTitle: "Concept A und Concept B von 1 bis 5 bewerten.",
+          recommendationLabel: "Abschlie&szlig;ende Empfehlung",
+          recommendationTitle: "Welche Richtung ist aktuell am st&auml;rksten?",
+          title: "Feedback zum v2 Konzeptvergleich",
+          writtenLabel: "Schriftliches Feedback",
+          writtenTitle: "Was soll bleiben, was verwirrt, was fehlt?"
+        }
+      };
+
+      const content = {
+        en: {
+          copyFailed: "Copying failed. Please copy the feedback manually from the text field.",
+          copyManual: "Clipboard is not available. Please copy the feedback manually from the text field.",
+          copied: "Feedback was copied to the clipboard.",
+          downloadReady: "Feedback file was prepared locally for download.",
+          generated: "Feedback was generated locally. Please review it before sharing.",
+          markdownNotice: "Generated locally in the browser. Nothing was uploaded, nothing was saved automatically, and no machine file was created.",
+          recommendations: [
+            ["preferA", "Prefer Concept A"],
+            ["preferB", "Prefer Concept B"],
+            ["combineBoth", "Combine both"],
+            ["unsure", "Still unsure"]
+          ],
+          ratingCriteria: [
+            ["firstGlanceClarity", "Understandable at first glance"],
+            ["findLaser", "Laser Test Pattern Generator found"],
+            ["findParametric", "Parametric Design / Nameplate found"],
+            ["activeVsHelper", "Active workflows vs. helpers understood"],
+            ["previewStatus", "Preview / status easy to read"],
+            ["safetyWarnings", "Safety and output warnings visible"],
+            ["futureTools", "Suitable for many future tools"],
+            ["workshopCompanion", "Feels like a Workshop Companion"],
+            ["nonTechnical", "Suitable for non-technical users"],
+            ["overallPreference", "Overall impression"]
+          ],
+          writtenFields: [
+            ["aWorks", "What works better in Concept A?"],
+            ["aConfusing", "What is confusing in Concept A?"],
+            ["bWorks", "What works better in Concept B?"],
+            ["bConfusing", "What is confusing in Concept B?"],
+            ["mainDirection", "Which direction should v2 take and why?"],
+            ["keptIdeas", "Which ideas from the other concept should stay?"],
+            ["missingFeatures", "Missing functions or UI elements"],
+            ["generalNotes", "General notes"]
+          ],
+          md: {
+            context: "Tester context",
+            date: "Date",
+            device: "Device / screen size",
+            feedback: "Written feedback",
+            firstImpression: "First impression",
+            local: "Local note",
+            name: "Name / alias",
+            recommendation: "Final recommendation",
+            ratings: "Ratings",
+            tableA: "Concept A",
+            tableB: "Concept B",
+            tableCriterion: "Criterion",
+            title: "v2 Concept Feedback"
+          }
+        },
+        de: {
+          copyFailed: "Kopieren nicht m\u00f6glich. Bitte Feedback manuell aus dem Textfeld kopieren.",
+          copyManual: "Zwischenablage nicht verf\u00fcgbar. Bitte Feedback manuell aus dem Textfeld kopieren.",
+          copied: "Feedback wurde in die Zwischenablage kopiert.",
+          downloadReady: "Feedback-Datei wurde lokal zum Download vorbereitet.",
+          generated: "Feedback wurde lokal erzeugt. Bitte vor dem Teilen kurz pr\u00fcfen.",
+          markdownNotice: "Lokal im Browser erzeugt. Es wurde nichts hochgeladen, nichts automatisch gespeichert und keine Maschinendatei erzeugt.",
+          recommendations: [
+            ["preferA", "Concept A bevorzugen"],
+            ["preferB", "Concept B bevorzugen"],
+            ["combineBoth", "Beide kombinieren"],
+            ["unsure", "Noch unsicher"]
+          ],
+          ratingCriteria: [
+            ["firstGlanceClarity", "Verst\u00e4ndlichkeit auf den ersten Blick"],
+            ["findLaser", "Laser Test Pattern Generator gefunden"],
+            ["findParametric", "Parametric Design / Nameplate gefunden"],
+            ["activeVsHelper", "Aktive Workflows vs. Helfer verstanden"],
+            ["previewStatus", "Vorschau / Status gut lesbar"],
+            ["safetyWarnings", "Sicherheits- und Output-Warnungen sichtbar"],
+            ["futureTools", "Geeignet f\u00fcr viele sp\u00e4tere Werkzeuge"],
+            ["workshopCompanion", "Gef\u00fchl als Workshop Companion"],
+            ["nonTechnical", "Geeignet f\u00fcr nicht-technische Nutzer"],
+            ["overallPreference", "Gesamteindruck"]
+          ],
+          writtenFields: [
+            ["aWorks", "Was funktioniert in Concept A besser?"],
+            ["aConfusing", "Was ist in Concept A verwirrend?"],
+            ["bWorks", "Was funktioniert in Concept B besser?"],
+            ["bConfusing", "Was ist in Concept B verwirrend?"],
+            ["mainDirection", "Welche Richtung sollte v2 nehmen und warum?"],
+            ["keptIdeas", "Welche Ideen aus dem anderen Konzept sollen bleiben?"],
+            ["missingFeatures", "Fehlende Funktionen oder UI-Elemente"],
+            ["generalNotes", "Allgemeine Notizen"]
+          ],
+          md: {
+            context: "Tester-Kontext",
+            date: "Datum",
+            device: "Ger\u00e4t / Bildschirmgr\u00f6\u00dfe",
+            feedback: "Schriftliches Feedback",
+            firstImpression: "Erster Eindruck",
+            local: "Lokaler Hinweis",
+            name: "Name / Alias",
+            recommendation: "Abschlie\u00dfende Empfehlung",
+            ratings: "Bewertungen",
+            tableA: "Concept A",
+            tableB: "Concept B",
+            tableCriterion: "Kriterium",
+            title: "Feedback zum v2 Konzeptvergleich"
+          }
+        }
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const form = $("feedbackForm");
+      const ratingTable = $("ratingTable");
+      const writtenFieldsNode = $("writtenFields");
+      const recommendationNode = $("recommendationOptions");
+      const output = $("markdownOutput");
+      const status = $("copyStatus");
+      let activeLanguage = V2I18n.getLanguage();
+
+      function optionList() {
+        const options = ['<option value="">-</option>'];
+        for (let value = 1; value <= 5; value += 1) {
+          options.push(`<option value="${value}">${value}</option>`);
+        }
+        return options.join("");
+      }
+
+      function buildRatings(language) {
+        ratingTable.querySelectorAll(".rating-row").forEach((row) => row.remove());
+        content[language].ratingCriteria.forEach(([key, label]) => {
+          const row = document.createElement("div");
+          row.className = "rating-row";
+          row.innerHTML = `
+            <strong>${label}</strong>
+            <div class="field">
+              <label for="ratingA_${key}">Concept A</label>
+              <select id="ratingA_${key}" name="ratingA_${key}">${optionList()}</select>
+            </div>
+            <div class="field">
+              <label for="ratingB_${key}">Concept B</label>
+              <select id="ratingB_${key}" name="ratingB_${key}">${optionList()}</select>
+            </div>
+          `;
+          ratingTable.appendChild(row);
+        });
+      }
+
+      function buildWrittenFields(language) {
+        writtenFieldsNode.innerHTML = "";
+        content[language].writtenFields.forEach(([name, label]) => {
+          const field = document.createElement("div");
+          field.className = "field";
+          field.innerHTML = `
+            <label for="${name}">${label}</label>
+            <textarea id="${name}" name="${name}"></textarea>
+          `;
+          writtenFieldsNode.appendChild(field);
+        });
+      }
+
+      function buildRecommendations(language) {
+        recommendationNode.innerHTML = "";
+        content[language].recommendations.forEach(([value, label]) => {
+          const option = document.createElement("label");
+          option.className = "radio-card";
+          option.innerHTML = `<input type="radio" name="recommendation" value="${value}">${label}`;
+          recommendationNode.appendChild(option);
+        });
+      }
+
+      function captureValues() {
+        const data = new FormData(form);
+        return Object.fromEntries(data.entries());
+      }
+
+      function restoreValues(values) {
+        Object.entries(values).forEach(([name, value]) => {
+          const item = form.elements[name];
+          if (!item) return;
+          if (item instanceof RadioNodeList) {
+            [...item].forEach((radio) => { radio.checked = radio.value === value; });
+          } else {
+            item.value = value;
+          }
+        });
+      }
+
+      function rebuildLanguage(language) {
+        const values = captureValues();
+        activeLanguage = language;
+        buildRatings(language);
+        buildWrittenFields(language);
+        buildRecommendations(language);
+        restoreValues(values);
+      }
+
+      function value(name) {
+        const item = form.elements[name];
+        if (!item) return "";
+        if (item instanceof RadioNodeList) return item.value || "";
+        return item.value || "";
+      }
+
+      function textOrDash(text) {
+        const trimmed = String(text || "").trim();
+        return trimmed || "-";
+      }
+
+      function block(title, body) {
+        return [`### ${title}`, "", textOrDash(body), ""].join("\n");
+      }
+
+      function markdownDate() {
+        return value("testDate") || new Date().toISOString().slice(0, 10);
+      }
+
+      function recommendationLabel(language) {
+        const selected = value("recommendation");
+        const found = content[language].recommendations.find(([key]) => key === selected);
+        return found ? found[1] : selected;
+      }
+
+      function generateMarkdown() {
+        const language = activeLanguage;
+        const copy = content[language];
+        const md = copy.md;
+        const lines = [
+          `# ${md.title}`,
+          "",
+          `> ${copy.markdownNotice}`,
+          "",
+          `## ${md.context}`,
+          "",
+          `- ${md.name}: ${textOrDash(value("testerName"))}`,
+          `- ${md.device}: ${textOrDash(value("deviceInfo"))}`,
+          `- ${md.date}: ${textOrDash(value("testDate"))}`,
+          "",
+          block(md.firstImpression, value("firstImpression")),
+          `## ${md.ratings}`,
+          "",
+          `| ${md.tableCriterion} | ${md.tableA} | ${md.tableB} |`,
+          "| --- | --- | --- |"
+        ];
+
+        copy.ratingCriteria.forEach(([key, label]) => {
+          lines.push(`| ${label} | ${textOrDash(value(`ratingA_${key}`))} | ${textOrDash(value(`ratingB_${key}`))} |`);
+        });
+
+        lines.push("", `## ${md.feedback}`, "");
+        copy.writtenFields.forEach(([name, label]) => {
+          lines.push(block(label, value(name)));
+        });
+        lines.push(
+          `## ${md.recommendation}`,
+          "",
+          textOrDash(recommendationLabel(language)),
+          "",
+          `## ${md.local}`,
+          "",
+          "- Static prototype.",
+          "- No backend.",
+          "- No upload.",
+          "- No network connection.",
+          "- No machine files.",
+          "- No machine output.",
+          ""
+        );
+        output.value = lines.join("\n").replace(/\n{3,}/g, "\n\n");
+        status.textContent = copy.generated;
+      }
+
+      async function copyMarkdown() {
+        if (!output.value.trim()) generateMarkdown();
+        const copy = content[activeLanguage];
+
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          output.focus();
+          output.select();
+          status.textContent = copy.copyManual;
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(output.value);
+          status.textContent = copy.copied;
+        } catch (error) {
+          output.focus();
+          output.select();
+          status.textContent = copy.copyFailed;
+        }
+      }
+
+      function downloadMarkdown() {
+        if (!output.value.trim()) generateMarkdown();
+        const blob = new Blob([output.value], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${activeLanguage === "de" ? "v2-konzept-feedback" : "v2-concept-feedback"}_${markdownDate()}.md`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        status.textContent = content[activeLanguage].downloadReady;
+      }
+
+      $("testDate").valueAsDate = new Date();
+      activeLanguage = V2I18n.initLanguage(translations, rebuildLanguage);
+      $("generateMarkdown").addEventListener("click", generateMarkdown);
+      $("copyMarkdown").addEventListener("click", copyMarkdown);
+      $("downloadMarkdown").addEventListener("click", downloadMarkdown);
+    })();
+  </script>
+</body>
+</html>

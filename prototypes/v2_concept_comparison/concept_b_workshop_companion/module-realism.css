@@ -79,6 +79,57 @@
   color: var(--muted);
 }
 
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.local-badge,
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(85, 201, 255, .36);
+  border-radius: 999px;
+  background: rgba(85, 201, 255, .09);
+  color: #dff3ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.local-badge {
+  min-height: 38px;
+  padding: 0 13px;
+  white-space: nowrap;
+}
+
+.language-switch {
+  overflow: hidden;
+}
+
+.language-switch button {
+  min-height: 38px;
+  border: 0;
+  border-right: 1px solid rgba(85, 201, 255, .24);
+  padding: 0 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.language-switch button:last-child {
+  border-right: 0;
+}
+
+.language-switch button.active {
+  background: rgba(85, 201, 255, .18);
+  color: var(--ink);
+}
+
 .manifest-preview {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
