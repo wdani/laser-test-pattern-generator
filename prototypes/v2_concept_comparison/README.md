@@ -14,7 +14,8 @@ Collect structured feedback:
 
 Read the tester guide before comparing both concepts:
 
-- `TESTER_GUIDE.md`
+- `TESTER_GUIDE.html` for a styled browser guide that can be printed or saved as PDF.
+- `TESTER_GUIDE.md` for a plain Markdown source version.
 
 The concepts can also be opened directly:
 
