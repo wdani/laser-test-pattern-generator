@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import Optional
 from .settings import GeneratorSettings
 
 GENERATED_OUTPUT_SUFFIXES = {".mks", ".nc"}
+APP_SUPPORT_DIR_NAME = "Laser Test Pattern Generator"
 
 
 def package_dir() -> Path:
@@ -21,6 +23,58 @@ def package_dir() -> Path:
             return executable_dir.parent.parent.parent
         return executable_dir
     return Path(__file__).resolve().parents[1]
+
+
+def is_frozen_app() -> bool:
+    return bool(getattr(sys, "frozen", False))
+
+
+def is_macos_app_bundle() -> bool:
+    if not is_frozen_app():
+        return False
+    executable_dir = Path(sys.executable).resolve().parent
+    return (
+        executable_dir.name == "MacOS"
+        and executable_dir.parent.name == "Contents"
+        and executable_dir.parent.parent.suffix == ".app"
+    )
+
+
+def user_library_dir(kind: str, home: Optional[Path] = None) -> Path:
+    return (home or Path.home()) / "Library" / kind / APP_SUPPORT_DIR_NAME
+
+
+def startup_log_path(
+    platform_name: Optional[str] = None,
+    frozen: Optional[bool] = None,
+    home: Optional[Path] = None,
+    package_root: Optional[Path] = None,
+) -> Path:
+    platform_value = platform_name or sys.platform
+    frozen_value = is_frozen_app() if frozen is None else frozen
+    if platform_value == "darwin" and frozen_value:
+        return user_library_dir("Logs", home) / "startup.log"
+    return (package_root or package_dir()) / "logs" / "startup.log"
+
+
+def config_dir(
+    platform_name: Optional[str] = None,
+    frozen: Optional[bool] = None,
+    home: Optional[Path] = None,
+    package_root: Optional[Path] = None,
+) -> Path:
+    platform_value = platform_name or sys.platform
+    frozen_value = is_frozen_app() if frozen is None else frozen
+    if platform_value == "darwin" and frozen_value:
+        return user_library_dir("Application Support", home) / "config"
+    return (package_root or package_dir()) / "config"
+
+
+def prepare_app_launch_environment() -> Path:
+    root = package_dir()
+    if is_frozen_app() and root.exists():
+        os.chdir(root)
+    return root
 
 
 def resource_dir(name: str) -> Path:

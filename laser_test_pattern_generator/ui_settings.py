@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict, Optional
 
-from .paths import package_dir
+from .paths import config_dir
 from .update_check import default_update_preferences
 
 
@@ -18,7 +18,7 @@ def normalize_theme_name(theme: object) -> str:
 
 
 def default_ui_settings_path() -> Path:
-    return package_dir() / "config" / "ui_settings.json"
+    return config_dir() / "ui_settings.json"
 
 
 def default_ui_settings() -> Dict[str, object]:
