@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tester-Guide: v2 Konzeptvergleich</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050713;
+      --panel: rgba(13, 19, 38, .82);
+      --line: rgba(110, 175, 255, .24);
+      --text: #eaf3ff;
+      --muted: #9cb1d2;
+      --blue: #55c9ff;
+      --green: #64e6bb;
+      --amber: #ffc05f;
+      --radius: 24px;
+      --shadow: 0 24px 90px rgba(0, 0, 0, .44);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 80% 8%, rgba(85, 201, 255, .24), transparent 32%),
+        radial-gradient(circle at 12% 18%, rgba(139, 116, 255, .22), transparent 34%),
+        linear-gradient(135deg, #050713, #07162b 68%, #0b0715);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(110, 175, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(110, 175, 255, .035) 1px, transparent 1px);
+      background-size: 62px 62px;
+    }
+
+    a { color: inherit; }
+
+    .page {
+      position: relative;
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0 56px;
+    }
+
+    .hero,
+    .card,
+    .section {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr);
+      gap: 26px;
+      align-items: center;
+      padding: 30px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      margin-bottom: 14px;
+      padding: 8px 11px;
+      border: 1px solid rgba(100, 230, 187, .38);
+      border-radius: 999px;
+      background: rgba(100, 230, 187, .08);
+      color: #dffcf5;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.08;
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 72px);
+      letter-spacing: -.03em;
+    }
+
+    h2 { font-size: 28px; }
+    h3 { font-size: 19px; }
+
+    p,
+    li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 18px 0 0;
+      font-size: 18px;
+    }
+
+    .hero-art {
+      position: relative;
+      min-height: 320px;
+      border: 1px solid rgba(110, 175, 255, .24);
+      border-radius: 22px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(2, 7, 18, .14), rgba(2, 7, 18, .82)),
+        url("assets/locked_loading_soon.png") center / cover no-repeat,
+        linear-gradient(135deg, #07162b, #050713);
+    }
+
+    .hero-art::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(160deg, transparent 0 46%, rgba(255, 192, 95, .72) 49%, rgba(85, 201, 255, .88) 50%, transparent 53%),
+        radial-gradient(circle at 72% 18%, rgba(85, 201, 255, .22), transparent 24%);
+      mix-blend-mode: screen;
+      opacity: .72;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .button,
+    button.button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 11px 15px;
+      border: 1px solid rgba(85, 201, 255, .58);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(85, 201, 255, .22), rgba(139, 116, 255, .14));
+      color: var(--text);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      border-color: rgba(255, 192, 95, .44);
+      background: rgba(255, 192, 95, .1);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card,
+    .section {
+      padding: 22px;
+    }
+
+    .card strong {
+      display: block;
+      color: var(--text);
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .section {
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .label {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .steps,
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .note {
+      border: 1px solid rgba(255, 192, 95, .42);
+      border-radius: 18px;
+      background: rgba(255, 192, 95, .08);
+      padding: 16px;
+    }
+
+    .language-divider {
+      margin: 34px 0 18px;
+      border: 0;
+      border-top: 1px solid rgba(110, 175, 255, .24);
+    }
+
+    @media (max-width: 880px) {
+      .hero,
+      .grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-art { min-height: 240px; }
+    }
+
+    @media print {
+      :root {
+        color-scheme: light;
+        --text: #111827;
+        --muted: #374151;
+        --panel: #ffffff;
+        --line: #d1d5db;
+        --shadow: none;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      body::before,
+      .hero-art,
+      .actions {
+        display: none;
+      }
+
+      .page {
+        width: 100%;
+        padding: 0;
+      }
+
+      .hero,
+      .card,
+      .section {
+        border: 1px solid #d1d5db;
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Lokal im Browser / Local in browser</span>
+        <h1>Tester-Guide: v2 Konzeptvergleich</h1>
+        <p>Eine lesbare Anleitung für Testerinnen und Tester. Die Seite kann direkt im Browser geöffnet oder über den Druckdialog als PDF gespeichert werden.</p>
+        <div class="actions">
+          <a class="button" href="index.html">Übersicht öffnen</a>
+          <a class="button" href="feedback.html">Feedback öffnen</a>
+          <button class="button secondary" type="button" onclick="window.print()">Als PDF speichern / drucken</button>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true"></div>
+    </section>
+
+    <section class="grid" aria-label="Schnellstart">
+      <article class="card">
+        <strong>1. Übersicht öffnen</strong>
+        <p>Starte mit <code>index.html</code>, wähle DE oder EN und öffne beide Konzepte.</p>
+      </article>
+      <article class="card">
+        <strong>2. Konzepte vergleichen</strong>
+        <p>Prüfe Orientierung, aktive Workflows, Helfer, Vorschau, Status und Sicherheitswarnungen.</p>
+      </article>
+      <article class="card">
+        <strong>3. Feedback teilen</strong>
+        <p>Nutze das Feedbackformular, kopiere oder lade die Zusammenfassung herunter und teile sie manuell.</p>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Ziel</span>
+        <h2>Was wird getestet?</h2>
+      </div>
+      <p>Dieser Prototyp vergleicht zwei mögliche UI-Richtungen für eine spätere v2 Oberfläche des Laser Test Pattern Generators und eines möglichen CNC/Laser Companions.</p>
+      <div class="split">
+        <div class="note">
+          <h3>Concept A: Desktop Program Shell</h3>
+          <p>Klassischer Programmaufbau mit Modulen, linker Navigation, zentralem Workflow und rechter Vorschau-/Statusleiste.</p>
+        </div>
+        <div class="note">
+          <h3>Concept B: Workshop Companion Command Center</h3>
+          <p>Werkstatt- und joborientierter Aufbau mit aktiven Jobs, Kontext-Helfern, Material-, Maschinen- und Sicherheitsinformationen.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Wichtig</span>
+        <h2>Grenzen und Datenschutz</h2>
+      </div>
+      <ul class="checklist">
+        <li>Alles läuft lokal im Browser.</li>
+        <li>Es wird nichts hochgeladen.</li>
+        <li>Feedback wird nicht automatisch gespeichert.</li>
+        <li>Nur die Spracheinstellung kann lokal im Browser gespeichert werden.</li>
+        <li>Die erzeugte Feedback-Datei muss manuell geteilt werden.</li>
+        <li>Der Prototyp erzeugt keine echten Maschinendateien und steuert keine Maschine.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Testablauf</span>
+        <h2>Empfohlene Reihenfolge</h2>
+      </div>
+      <ol class="steps">
+        <li><code>index.html</code> öffnen.</li>
+        <li>Intro ansehen oder überspringen.</li>
+        <li>Sprache wählen: DE oder EN.</li>
+        <li>Concept A öffnen und Laser Test Pattern Generator sowie Parametric Design / Nameplate Generator finden.</li>
+        <li>Verständlichkeit, Navigation, Vorschau, Status und Helfer prüfen.</li>
+        <li>Zurück zur Übersicht gehen und Concept B mit denselben Punkten testen.</li>
+        <li><code>feedback.html</code> öffnen, Bewertungen und Notizen eintragen.</li>
+        <li>Feedback erzeugen, kopieren oder herunterladen und manuell teilen.</li>
+      </ol>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Worauf achten?</span>
+        <h2>Bewertungsfragen</h2>
+      </div>
+      <ul class="checklist">
+        <li>Welches Konzept ist schneller verständlich?</li>
+        <li>Wo findet man Laser Test Pattern Generator und Parametric Design / Nameplate leichter?</li>
+        <li>Wo sind aktive Workflows und Helfer klarer getrennt?</li>
+        <li>Wo wirken Vorschau, Status und Sicherheitswarnungen klarer?</li>
+        <li>Welches Konzept skaliert besser für viele spätere Werkzeuge?</li>
+        <li>Welches Konzept wirkt besser für nicht-technische Nutzer?</li>
+        <li>Welche Ideen aus beiden Konzepten sollten kombiniert werden?</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Nicht bewerten als</span>
+        <h2>Kein fertiges Produkt</h2>
+      </div>
+      <p>Bitte den Prototyp nicht als fertige App, echtes CAM-System, echte Maschinensteuerung, echten Dateigenerator oder finale Produktentscheidung bewerten. Der Fokus liegt auf Struktur, Workflow-Klarheit, Bediengefühl, Sprache, Orientierung und Erweiterbarkeit.</p>
+    </section>
+
+    <hr class="language-divider">
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">English</span>
+        <h2>Tester Guide: v2 Concept Comparison</h2>
+      </div>
+      <p>This prototype compares two possible UI directions for a future v2 interface of the Laser Test Pattern Generator and a possible CNC/Laser Companion.</p>
+      <div class="split">
+        <div class="note">
+          <h3>Concept A: Desktop Program Shell</h3>
+          <p>A classic desktop-style application with modules, left navigation, a central workflow area, and a right preview/status rail.</p>
+        </div>
+        <div class="note">
+          <h3>Concept B: Workshop Companion Command Center</h3>
+          <p>A workshop- and job-centered interface with active jobs, contextual helpers, material, machine, and safety information.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Important</span>
+        <h2>Limits and privacy</h2>
+      </div>
+      <ul class="checklist">
+        <li>Everything runs locally in the browser.</li>
+        <li>Nothing is uploaded.</li>
+        <li>Feedback is not saved automatically.</li>
+        <li>Only the language selection may be stored locally in the browser.</li>
+        <li>The generated feedback file must be shared manually.</li>
+        <li>The prototype does not create real machine files and does not control a machine.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">Test flow</span>
+        <h2>Recommended order</h2>
+      </div>
+      <ol class="steps">
+        <li>Open <code>index.html</code>.</li>
+        <li>Watch or skip the intro.</li>
+        <li>Select DE or EN.</li>
+        <li>Open Concept A and find the Laser Test Pattern Generator and Parametric Design / Nameplate Generator.</li>
+        <li>Check clarity, navigation, preview, status, and helper areas.</li>
+        <li>Go back to the overview and test Concept B with the same checks.</li>
+        <li>Open <code>feedback.html</code>, enter ratings and notes.</li>
+        <li>Generate, copy, or download the feedback and share it manually.</li>
+      </ol>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="label">What to watch for</span>
+        <h2>Review questions</h2>
+      </div>
+      <ul class="checklist">
+        <li>Which concept is easier to understand quickly?</li>
+        <li>Where are Laser Test Pattern Generator and Parametric Design / Nameplate easier to find?</li>
+        <li>Where are active workflows and helper tools separated more clearly?</li>
+        <li>Where are preview, status, and safety warnings clearer?</li>
+        <li>Which concept scales better for many future tools?</li>
+        <li>Which concept feels better for non-technical users?</li>
+        <li>Which ideas from both concepts should be combined?</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
