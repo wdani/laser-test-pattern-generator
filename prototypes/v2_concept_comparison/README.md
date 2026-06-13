@@ -12,6 +12,10 @@ Collect structured feedback:
 
 - `feedback.html`
 
+Read the tester guide before comparing both concepts:
+
+- `TESTER_GUIDE.md`
+
 The concepts can also be opened directly:
 
 - `concept_a_program_shell/index.html`
