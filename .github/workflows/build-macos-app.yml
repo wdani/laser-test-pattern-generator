@@ -81,8 +81,20 @@ jobs:
             fi
           done
 
+          app_executable="$package_path/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+          if [ ! -x "$app_executable" ]; then
+            echo "App executable is not executable: $app_executable" >&2
+            exit 1
+          fi
+
+      - name: Archive macOS app package
+        run: |
+          mkdir -p dist
+          tar -czf "dist/$ARTIFACT_NAME.tar.gz" -C package "$PACKAGE_DIR"
+          test -f "dist/$ARTIFACT_NAME.tar.gz"
+
       - name: Upload macOS app package artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: package/${{ env.PACKAGE_DIR }}
+          path: dist/${{ env.ARTIFACT_NAME }}.tar.gz

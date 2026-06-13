@@ -11,7 +11,9 @@ notarized installer.
 
 ## Package Contents
 
-The macOS artifact contains a folder with:
+The GitHub Actions artifact contains a `.tar.gz` archive. The tar archive is
+used so macOS executable permissions inside the `.app` bundle are preserved.
+After extracting the archive, the package folder contains:
 
 - `LaserTestPatternGenerator.app`
 - `README.md`
@@ -30,10 +32,10 @@ writes presets from the visible package folder.
 
 1. Open the manual `Build macOS App` workflow run in GitHub Actions.
 2. Download the macOS artifact.
-3. Extract the artifact first. Do not run the app from inside a compressed ZIP
-   viewer.
-4. Open the extracted folder.
-5. Double-click `LaserTestPatternGenerator.app`.
+3. Extract the downloaded artifact.
+4. Extract the contained `.tar.gz` archive.
+5. Open the extracted package folder.
+6. Double-click `LaserTestPatternGenerator.app`.
 
 ## Gatekeeper Notes
 

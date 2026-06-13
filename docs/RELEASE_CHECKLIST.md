@@ -33,6 +33,8 @@ It is meant to be practical and beginner-friendly.
 ## macOS App Package Check
 
 - Download and extract the macOS app artifact.
+- Extract the contained `.tar.gz` package archive. It is used to preserve
+  executable permissions inside the `.app` bundle.
 - Confirm `LaserTestPatternGenerator.app` is present.
 - Confirm `templates/`, `presets/`, and `docs/` are present next to the `.app`.
 - Confirm README, license, changelog, and release notes are included.
