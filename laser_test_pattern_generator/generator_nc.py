@@ -196,6 +196,7 @@ def generate_generic_nc(settings: GeneratorSettings) -> Dict[str, object]:
     return {
         "output": str(out),
         "format": "NC",
+        "nc_flavor": "generic",
         "lines": len(lines),
         "tiles": rows * cols,
         "speeds_visual_top_to_bottom": list(reversed(speeds)),

@@ -28,6 +28,7 @@ from .generator_nc import (
     profile_for_nc_s_max,
     resolve_nc_s_max,
 )
+from .generator_nc_makera import generate_makera_studio_nc
 from .geometry import Point, Segment, apply_auto_position, computed_layout, linspace, make_uuid, validate_layout
 from .gui import GeneratorGui
 from .paths import (
@@ -58,9 +59,11 @@ from .presets import (
 )
 from .settings import (
     APP_VERSION,
+    DEFAULT_NC_FLAVOR,
     DEFAULT_NC_POWER_PROFILE,
     GeneratorSettings,
     LASER_MODES,
+    NC_FLAVORS,
     NC_POWER_PROFILES,
 )
 from .safety_preflight import CHECKLIST_NAME, CHECKLIST_VERSION, safety_preflight_items
@@ -75,12 +78,14 @@ from .ui_settings import (
 
 __all__ = [
     "APP_VERSION",
+    "DEFAULT_NC_FLAVOR",
     "DEFAULT_NC_POWER_PROFILE",
     "DEFAULT_UI_THEME",
     "FONT",
     "GeneratorGui",
     "GeneratorSettings",
     "LASER_MODES",
+    "NC_FLAVORS",
     "NC_POWER_PROFILES",
     "PRESET_METADATA_FIELDS",
     "Point",
@@ -102,6 +107,7 @@ __all__ = [
     "fmt_s_value",
     "generate_generic_nc",
     "generate_mks",
+    "generate_makera_studio_nc",
     "get_template_paths",
     "import_preset_file",
     "linspace",

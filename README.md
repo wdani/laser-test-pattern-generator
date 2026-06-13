@@ -22,6 +22,7 @@ For detailed installation and startup help, see
 
 - Generate Makera Studio `.mks` project files.
 - Generate generic `.nc` / G-code files.
+- Experimental Makera Studio-style `.nc` output flavor.
 - Output modes: `MKS`, `NC`, or `Both`.
 - Configurable grid: rows, columns, tile size, gap, and stock size.
 - Configurable test ranges: speed in mm/min and power in percent.
@@ -215,6 +216,10 @@ folders.
 Generic `.nc` output is controller-dependent. Different controllers use
 different laser power scales.
 
+The default NC flavor is `generic`. An experimental `makera-studio` NC flavor
+is also available for the newer Makera Studio-style `.nc` export. See
+[docs/NC_OUTPUT_FLAVORS.md](docs/NC_OUTPUT_FLAVORS.md).
+
 Generated `.nc` files include metadata comments at the top with the selected
 NC power profile, S max, grid settings, speed and power ranges, and a reminder
 to verify the S-value scale before running the file.
@@ -251,6 +256,7 @@ Read [docs/SAFETY.md](docs/SAFETY.md).
 See [docs/INSTALLATION.md](docs/INSTALLATION.md),
 [docs/JSON_API.md](docs/JSON_API.md),
 [docs/MATERIAL_RESULTS.md](docs/MATERIAL_RESULTS.md),
+[docs/NC_OUTPUT_FLAVORS.md](docs/NC_OUTPUT_FLAVORS.md),
 [docs/PRESETS.md](docs/PRESETS.md),
 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md),
 [docs/ROADMAP.md](docs/ROADMAP.md), and

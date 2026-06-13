@@ -45,7 +45,8 @@ python makera_material_test_generator.py --api generate --config examples/api/ge
 Config files use snake_case keys matching the `default-settings` response where
 possible, for example `output_format`, `output_path`, `rows`, `cols`,
 `speed_min`, `power_max`, `labels_enabled`, `tile_mode_name`, and
-`nc_power_profile`.
+`nc_power_profile`. NC flavor settings are also available through
+`nc_flavor`, `z_offset`, and `indent_distance`.
 
 Precedence is:
 
@@ -208,6 +209,12 @@ Example for NC:
 python makera_material_test_generator.py --api generate --format NC --output material_test.nc --overwrite
 ```
 
+Example for experimental Makera Studio-style NC:
+
+```bash
+python makera_material_test_generator.py --api generate --format NC --nc-flavor makera-studio --output material_test_makera_studio.nc --overwrite
+```
+
 Example for MKS:
 
 ```bash
@@ -290,8 +297,11 @@ Important result fields:
   `tile_shapes`, `speeds_visual_top_to_bottom`, `powers_left_to_right`,
   `grid_width`, `grid_height`, and `warnings`.
 - NC results may include `output`, `format`, `lines`, `tiles`,
-  `speeds_visual_top_to_bottom`, `powers_left_to_right`, `power_profile`, and
-  `s_max`.
+  `speeds_visual_top_to_bottom`, `powers_left_to_right`, `nc_flavor`,
+  `power_profile`, and `s_max`.
+- `nc_flavor` is `generic` by default. The experimental `makera-studio` flavor
+  follows observed new Makera Studio-style `.nc` export structure. It is not
+  legacy Makera CAM `.mkc` or old Makera CAM `.nc` support.
 
 Intended frontend usage:
 

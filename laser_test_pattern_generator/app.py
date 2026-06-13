@@ -10,6 +10,7 @@ from typing import Optional, Sequence
 
 from .generator_mks import generate_mks
 from .generator_nc import generate_generic_nc, resolve_nc_s_max
+from .generator_nc_makera import MakeraStudioNcGenerationError, generate_makera_studio_nc
 from .geometry import computed_layout, linspace, validate_layout
 from .gui import GeneratorGui
 from .job_manifest import write_job_manifest
@@ -26,6 +27,7 @@ from .settings import (
     DEFAULT_NC_POWER_PROFILE,
     GeneratorSettings,
     LASER_MODES,
+    NC_FLAVORS,
     NC_POWER_PROFILES,
 )
 
@@ -74,6 +76,9 @@ CONFIG_SCALAR_OPTIONS = {
     "stock_z": "--stock-z",
     "nc_power_profile": "--nc-power-profile",
     "nc_s_max": "--nc-s-max",
+    "nc_flavor": "--nc-flavor",
+    "z_offset": "--z-offset",
+    "indent_distance": "--indent-distance",
     "template_dir": "--template-dir",
 }
 
@@ -145,10 +150,13 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--no-round-speed", dest="no_round_speed", action="store_true", help="Do not round generated speed values")
     p.add_argument("--round-power", dest="no_round_power", action="store_false", help=argparse.SUPPRESS)
     p.add_argument("--no-round-power", dest="no_round_power", action="store_true", help="Do not round generated power values")
+    p.add_argument("--nc-flavor", choices=list(NC_FLAVORS), default="generic", help="NC output flavor: generic or experimental Makera Studio-style")
     p.add_argument("--nc-power-profile", choices=list(NC_POWER_PROFILES), default=DEFAULT_NC_POWER_PROFILE, help="Generic NC laser power scale profile")
     p.add_argument("--nc-s-max", type=float, default=1.0, help="Custom NC S-value for 100 percent power; used when --nc-power-profile Custom")
     p.add_argument("--nc-include-labels", dest="nc_include_labels", action="store_true", help=argparse.SUPPRESS)
     p.add_argument("--no-nc-include-labels", dest="nc_include_labels", action="store_false", help=argparse.SUPPRESS)
+    p.add_argument("--z-offset", type=float, default=0.0, help="Laser Z offset setting metadata; Makera Studio NC currently still emits G0 Z0")
+    p.add_argument("--indent-distance", type=float, default=0.0, help="Inset distance for Makera Studio-style Fill and Offset Fill geometry")
     p.add_argument("--template-dir", type=Path, default=None)
     p.add_argument("--write-manifest", dest="write_manifest", action="store_true", help="Write an optional JSON job manifest next to generated output")
     p.add_argument("--no-write-manifest", dest="write_manifest", action="store_false", help=argparse.SUPPRESS)
@@ -214,10 +222,13 @@ def settings_from_args(args: argparse.Namespace) -> GeneratorSettings:
         round_speed_values=not args.no_round_speed,
         round_power_values=not args.no_round_power,
         template_dir=args.template_dir,
+        nc_flavor=args.nc_flavor,
         nc_power_profile=args.nc_power_profile,
         nc_s_max=resolve_nc_s_max(args.nc_power_profile, args.nc_s_max),
         nc_include_labels=args.nc_include_labels,
         write_manifest=args.write_manifest,
+        z_offset=args.z_offset,
+        indent_distance=args.indent_distance,
     )
 
 
@@ -402,7 +413,10 @@ def generate_output_infos(settings: GeneratorSettings) -> list:
     if settings.output_format in ("MKS", "Both"):
         infos.append(generate_mks(copy.deepcopy(settings)))
     if settings.output_format in ("NC", "Both"):
-        infos.append(generate_generic_nc(copy.deepcopy(settings)))
+        if settings.nc_flavor == "makera-studio":
+            infos.append(generate_makera_studio_nc(copy.deepcopy(settings)))
+        else:
+            infos.append(generate_generic_nc(copy.deepcopy(settings)))
     return infos
 
 
@@ -491,7 +505,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.api == "generate":
         settings = settings_from_args(args)
-        print(json.dumps(generate_response(settings), indent=2, ensure_ascii=False))
+        try:
+            print(json.dumps(generate_response(settings), indent=2, ensure_ascii=False))
+        except MakeraStudioNcGenerationError as exc:
+            print(f"Makera Studio NC generation error: {exc}", file=sys.stderr)
+            return 2
         return 0
 
     if args.api == "log-result":
@@ -511,8 +529,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     settings = settings_from_args(args)
-    infos = generate_output_infos(settings)
-    manifest_info = maybe_write_job_manifest(settings, infos, source="cli")
+    try:
+        infos = generate_output_infos(settings)
+        manifest_info = maybe_write_job_manifest(settings, infos, source="cli")
+    except MakeraStudioNcGenerationError as exc:
+        print(f"Makera Studio NC generation error: {exc}", file=sys.stderr)
+        return 2
 
     output_data = infos if len(infos) > 1 else infos[0]
     if manifest_info is not None:

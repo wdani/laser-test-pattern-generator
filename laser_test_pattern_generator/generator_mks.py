@@ -158,6 +158,8 @@ def path_from_template(
     passes: int = 1,
     bidirectional: bool = True,
     scan_angle: float = 0.0,
+    indent_distance: float = 0.0,
+    z_offset: float = 0.0,
 ) -> Dict:
     """Create a Makera laser path from an observed template path."""
     p = copy.deepcopy(template)
@@ -173,8 +175,10 @@ def path_from_template(
     p["bidirecttional"] = bool(bidirectional)
     p["scanangle"] = float(scan_angle)
     p["passesnum"] = int(passes)
-    p["indentdisatance"] = 0
-    p["zoffset"] = 0
+    indent_value = float(indent_distance)
+    z_value = float(z_offset)
+    p["indentdisatance"] = 0 if indent_value == 0 else indent_value
+    p["zoffset"] = 0 if z_value == 0 else z_value
     p["dPathAngle"] = -1
     return p
 
@@ -368,6 +372,7 @@ def generate_mks(settings: GeneratorSettings) -> Dict[str, object]:
             label_template, label_mesh_ids,
             settings.label_speed, settings.label_power, label_mode,
             line_interval=0.1, passes=1, bidirectional=True, scan_angle=0,
+            indent_distance=0.0, z_offset=settings.z_offset,
         ))
         schemes.append(scheme_for_path(label_mesh_ids, settings.label_speed, settings.label_power, label_mode))
 
@@ -383,6 +388,8 @@ def generate_mks(settings: GeneratorSettings) -> Dict[str, object]:
                 passes=settings.passes,
                 bidirectional=settings.bidirectional,
                 scan_angle=settings.scan_angle,
+                indent_distance=settings.indent_distance,
+                z_offset=settings.z_offset,
             ))
             schemes.append(scheme_for_path([mesh_id], speed, power, tile_mode))
 
