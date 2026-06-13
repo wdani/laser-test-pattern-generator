@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laser Test Pattern Generator - v2 Program Shell Concept</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="module-realism.css">
+</head>
+<body>
+  <div class="app" data-view="job">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-orb"></div>
+        <div>
+          <strong>Laser Test Pattern Generator</strong>
+          <span>v2 program shell - stable v1.x backend mock</span>
+        </div>
+      </div>
+      <nav class="module-tabs" aria-label="Main modules">
+        <button class="module active" data-module="pattern">Laser Test Pattern</button>
+        <button class="module" data-module="design">Parametric Design</button>
+        <button class="module" data-module="journal">Journal</button>
+        <button class="module" data-module="tools">Helpers</button>
+        <button class="module" data-module="machine">Machine</button>
+        <button class="module" data-module="settings">Settings</button>
+      </nav>
+      <div class="top-actions">
+        <span class="ghost">Stable repo noted</span>
+        <button id="motionToggle" class="ghost">Motion on</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="subnav">
+        <div class="subnav-title">
+          <span>Active module</span>
+          <strong id="activeModuleTitle">Test Pattern</strong>
+        </div>
+        <nav id="subnavList">
+          <button class="sub active" data-view="job">Job Setup</button>
+          <button class="sub" data-view="stock">Stock</button>
+          <button class="sub" data-view="material">Material</button>
+          <button class="sub" data-view="grid">Grid</button>
+          <button class="sub" data-view="laser">Laser</button>
+          <button class="sub" data-view="output">Output</button>
+          <button class="sub" data-view="verify">Verify</button>
+        </nav>
+        <div class="module-note">
+          <span class="dot"></span>
+          Mock modules show local static data only.
+        </div>
+      </aside>
+
+      <main class="workbench">
+        <section class="readiness">
+          <article class="ready warn"><span>Preview</span><strong>required</strong></article>
+          <article class="ready ok"><span>Material</span><strong id="readyMaterial">Cork</strong></article>
+          <article class="ready ok"><span>Stock</span><strong id="readyStock">100 x 100 mm</strong></article>
+          <article class="ready warn"><span>S profile</span><strong>check NC</strong></article>
+          <article class="ready neutral"><span>Generation</span><strong>mock only</strong></article>
+        </section>
+
+        <section class="workspace-card active-panel" data-panel="job">
+          <div class="section-head">
+            <span class="step">01</span>
+            <div><h1>Current Job</h1><p>The job is the shared object for future modules: pattern generation, journal, archive, costing, and safety.</p></div>
+          </div>
+          <div class="job-hero">
+            <label class="field wide"><span>Job name</span><input id="jobName" value="Cork material test - 7 x 7"></label>
+            <label class="field"><span>Job type</span><select><option>Laser material test</option><option>Parametric nameplate</option><option disabled>Hybrid CNC/Laser</option><option disabled>SVG feasibility check</option></select></label>
+            <label class="field"><span>Status</span><select><option>Draft / needs preview</option><option disabled>Ready after verification</option></select></label>
+          </div>
+          <div class="module-grid">
+            <div class="module-card active"><span>Active workflow</span><strong>Laser Test Pattern</strong><em>Current material-test generator</em></div>
+            <div class="module-card active alt"><span>Active workflow</span><strong>Parametric Design</strong><em>Nameplate/pattern generator concept</em></div>
+            <div class="module-card locked"><span>Helper surface</span><strong>Material Journal</strong><em>Best settings, photos, repeatability</em></div>
+            <div class="module-card locked"><span>Helper surface</span><strong>Cost + Manifest</strong><em>Quote risk and settings snapshot</em></div>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="stock">
+          <div class="section-head"><span class="step">02</span><div><h1>Stock / Workpiece</h1><p>Set physical stock dimensions before grid and output decisions.</p></div></div>
+          <div class="control-grid">
+            <label class="field"><span>Width</span><input id="stockW" type="number" value="100"><em>mm</em></label>
+            <label class="field"><span>Height</span><input id="stockH" type="number" value="100"><em>mm</em></label>
+            <label class="field"><span>Safe margin</span><input id="margin" type="number" value="8"><em>mm</em></label>
+            <label class="field"><span>Origin</span><select><option>lower-left</option><option>center</option></select></label>
+          </div>
+          <div class="warning-inline">Stock bounds and margin are preview-only in this prototype. Real files must still be verified.</div>
+        </section>
+
+        <section class="workspace-card" data-panel="material">
+          <div class="section-head"><span class="step">03</span><div><h1>Material & Preset</h1><p>Material choices should later connect to presets, journal results, and cost estimates.</p></div></div>
+          <div class="control-grid">
+            <label class="field"><span>Material</span><select id="material"><option>Cork</option><option>Plywood</option><option>Cardboard</option></select></label>
+            <label class="field"><span>Preset</span><select><option>Cork fine 7 × 7</option><option>Plywood smoke test</option><option>Cardboard quick map</option></select></label>
+            <label class="field"><span>Thickness</span><input value="3"><em>mm</em></label>
+            <label class="field"><span>Journal link</span><input value="not logged yet"></label>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="grid">
+          <div class="section-head"><span class="step">04</span><div><h1>Test Grid</h1><p>Speed/power combinations, spacing, labels, and layout footprint.</p></div></div>
+          <div class="control-grid">
+            <label class="field"><span>Rows</span><input id="rows" type="number" value="7"></label>
+            <label class="field"><span>Columns</span><input id="cols" type="number" value="7"></label>
+            <label class="field"><span>Tile size</span><input id="tile" type="number" value="8"><em>mm</em></label>
+            <label class="field"><span>Gap</span><input id="gap" type="number" value="2"><em>mm</em></label>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="laser">
+          <div class="section-head"><span class="step">05</span><div><h1>Laser Settings</h1><p>Mode, speed, power, and machine output profile.</p></div></div>
+          <div class="control-grid">
+            <label class="field"><span>Mode</span><select id="mode"><option>Offset Fill</option><option>Line</option><option>Fill</option></select></label>
+            <label class="field"><span>Speed min</span><input id="speedMin" value="2200"><em>mm/min</em></label>
+            <label class="field"><span>Speed max</span><input id="speedMax" value="4000"><em>mm/min</em></label>
+            <label class="field"><span>Power range</span><input id="powerRange" value="5–20"><em>%</em></label>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="output">
+          <div class="section-head"><span class="step">06</span><div><h1>Output</h1><p>Select planned output. The static prototype never writes files.</p></div></div>
+          <div class="segmented" id="outputChoice"><button class="selected" data-output="Both">Both</button><button data-output="MKS">MKS</button><button data-output="NC">NC</button></div>
+          <div class="file-preview"><strong id="fileMks">cork_material_test.mks</strong><strong id="fileNc">cork_material_test.nc</strong></div>
+          <button id="generateMock" class="primary big">Generate disabled · static prototype</button>
+          <p id="generateMsg" class="mock-msg">No files are created in this concept.</p>
+        </section>
+
+        <section class="workspace-card" data-panel="verify">
+          <div class="section-head"><span class="step">07</span><div><h1>Preview & Verify</h1><p>Global safety and file verification before any real machine use.</p></div></div>
+          <ul class="check-list">
+            <li>Preview MKS/NC in Makera Studio or your sender/viewer.</li>
+            <li>Check NC S scale/profile before running GRBL-style output.</li>
+            <li>Verify stock origin, bounds, focus, air assist, and extraction.</li>
+            <li>Avoid unsafe or unknown laser materials.</li>
+          </ul>
+        </section>
+
+        <section class="workspace-card" data-panel="design_setup">
+          <div class="section-head"><span class="step">D1</span><div><h1>Parametric Design Generator</h1><p>Create a simple CNC/laser-ready design preview from parameters. This prototype does not create real files.</p></div></div>
+          <div class="job-hero">
+            <label class="field wide"><span>Design name</span><input id="designName" value="Romy star nameplate"></label>
+            <label class="field"><span>Operation intent</span><select id="designIntent"><option>laser only</option><option>CNC outline + laser detail</option><option>hybrid placeholder</option></select></label>
+            <label class="field"><span>Output target</span><select id="designTarget"><option>SVG preview</option><option>future CNC/laser layers</option><option>not real machine output yet</option></select></label>
+          </div>
+          <div class="module-grid">
+            <div class="module-card active alt"><span>Active workflow</span><strong>Parametric Nameplate</strong><em>Shape, name, motif, preview</em></div>
+            <div class="module-card locked"><span>Helper</span><strong>Text Fit Check</strong><em>Keep the name readable at size</em></div>
+            <div class="module-card locked"><span>Helper</span><strong>Layer Plan</strong><em>Separate cut, score, and laser detail</em></div>
+            <div class="module-card locked"><span>Safety</span><strong>Verify before export</strong><em>No direct machine output in concept</em></div>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="design_shape">
+          <div class="section-head"><span class="step">D2</span><div><h1>Workpiece Shape</h1><p>Choose a simple blank shape and size before placing text or motifs.</p></div></div>
+          <div class="control-grid">
+            <label class="field"><span>Shape</span><select id="designShape"><option>rectangle</option><option>circle</option></select></label>
+            <label class="field"><span>Width</span><input id="designWidth" type="number" value="120"><em>mm</em></label>
+            <label class="field"><span>Height</span><input id="designHeight" type="number" value="55"><em>mm</em></label>
+            <label class="field"><span>Diameter</span><input id="designDiameter" type="number" value="80"><em>mm</em></label>
+            <label class="field"><span>Thickness</span><input id="designThickness" type="number" value="3"><em>mm</em></label>
+            <label class="field"><span>Safe margin</span><input id="designMargin" type="number" value="5"><em>mm</em></label>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="design_text">
+          <div class="section-head"><span class="step">D3</span><div><h1>Text & Motif</h1><p>Position a name and a simple motif without requiring a full CAD workflow.</p></div></div>
+          <div class="control-grid">
+            <label class="field"><span>Name text</span><input id="designText" value="Romy"></label>
+            <label class="field"><span>Text position</span><select id="designTextPosition"><option>lower third</option><option>center</option><option>top</option></select></label>
+            <label class="field"><span>Motif</span><select id="designMotif"><option>star</option><option>stripes</option><option>radial pattern</option><option>diagonal gradient</option></select></label>
+            <label class="field"><span>Motif position</span><select><option>top center</option><option>left side</option><option>background</option></select></label>
+          </div>
+          <div class="warning-inline">Text and motif output are design-preview placeholders only. Real CAM/layer generation is future work.</div>
+        </section>
+
+        <section class="workspace-card" data-panel="design_pattern">
+          <div class="section-head"><span class="step">D4</span><div><h1>Pattern Intent</h1><p>Explore decorative pattern ideas before deciding whether the result belongs to laser, CNC, or hybrid output.</p></div></div>
+          <div class="decision-strip">
+            <span class="decision-token good">SVG preview first</span>
+            <span class="decision-token">future layer split</span>
+            <span class="decision-token warn">no machine output</span>
+            <span class="decision-token">verify material safety</span>
+          </div>
+          <div class="design-fit">
+            <article><span>Laser only</span><strong>engraved name + motif</strong><p>Useful for fast personalization on known laser-safe material.</p></article>
+            <article><span>CNC outline + laser detail</span><strong>hybrid placeholder</strong><p>Future flow could cut a clean border and laser the name/motif after preview.</p></article>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="design_output">
+          <div class="section-head"><span class="step">D5</span><div><h1>Design Output Package</h1><p>Plan what the future generator might produce while keeping this concept static.</p></div></div>
+          <div class="manifest-box"><code>romy_star_nameplate.svg</code><code>layers: outline, text, motif, guide</code><code>future: CNC/laser layers after backend design</code><code>status: static preview only</code></div>
+        </section>
+
+        <section class="workspace-card" data-panel="design_verify">
+          <div class="section-head"><span class="step">D6</span><div><h1>Design Verify</h1><p>Keep safety and output review visible even for a friendly design generator.</p></div></div>
+          <ul class="check-list">
+            <li>Confirm material is safe for laser work before any future export.</li>
+            <li>Check text size, motif spacing, and border clearance.</li>
+            <li>Preview all layers before using CNC or laser output.</li>
+            <li>Do not treat this static SVG mock as machine-ready code.</li>
+          </ul>
+        </section>
+
+        <section class="workspace-card" data-panel="journal_log">
+          <div class="section-head"><span class="step">J1</span><div><h1>Result Log</h1><p>Static mock of how a finished material test could be logged against the current job.</p></div></div>
+          <div class="decision-strip"><span class="decision-token good">Save preset</span><span class="decision-token">Repeat on offcut</span><span class="decision-token warn">Photo needed</span><span class="decision-token">Quote ready</span></div>
+          <div class="two-column">
+            <div class="mock-panel">
+              <h3>Cork material map</h3>
+              <div class="result-grid">
+                <span class="bad">smoke</span><span class="ok">clean mark</span><span class="ok">clean mark</span><span class="warn">deep mark</span>
+                <span class="bad">too light</span><span class="ok selected">best cell 12%</span><span class="ok">usable</span><span class="warn">edge char</span>
+                <span class="bad">too light</span><span class="ok">usable</span><span class="ok">usable</span><span class="warn">too dark</span>
+              </div>
+            </div>
+            <div class="mock-panel">
+              <h3>Run note</h3>
+              <p class="soft-copy">Best visual result around 3000 mm/min at 12% power. Light smoke starts above 18% power on this cork sheet.</p>
+              <dl class="fact-list"><div><dt>Photo set</dt><dd>3 images attached (mock)</dd></div><div><dt>Operator</dt><dd>Workshop test</dd></div><div><dt>Next action</dt><dd>Save as cork fine preset</dd></div></dl>
+              <div class="result-memory"><span>Repeatability</span><strong>good candidate</strong><em>Same batch should start at 3000 / 12% before fine tuning.</em></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace-card" data-panel="journal_runs">
+          <div class="section-head"><span class="step">J2</span><div><h1>Material Runs</h1><p>Recent mock runs show how the journal could compare repeat tests.</p></div></div>
+          <table class="mini-table"><thead><tr><th>Date</th><th>Material</th><th>Preset</th><th>Best cell</th><th>Status</th></tr></thead><tbody><tr><td>2026-06-10</td><td>Cork 3 mm</td><td>fine 7 x 7</td><td>3000 / 12%</td><td>candidate</td></tr><tr><td>2026-06-09</td><td>Plywood 4 mm</td><td>smoke map</td><td>2400 / 18%</td><td>needs retest</td></tr><tr><td>2026-06-08</td><td>Cardboard</td><td>quick map</td><td>3600 / 8%</td><td>approved</td></tr></tbody></table>
+          <div class="decision-strip"><span class="decision-token good">Use cork candidate</span><span class="decision-token warn">Retest plywood</span><span class="decision-token">Archive approved run</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="journal_photos">
+          <div class="section-head"><span class="step">J3</span><div><h1>Photos</h1><p>Photo placeholders show how test images could sit next to result notes.</p></div></div>
+          <div class="photo-strip"><div>overview photo</div><div>best cell macro</div><div>edge smoke detail</div></div>
+          <div class="design-fit"><article><span>Macro check</span><strong>cell 3000 / 12%</strong><p>Use as visual proof before promoting this setting to a material preset.</p></article><article><span>Failed-job hint</span><strong>edge smoke visible</strong><p>If repeated, try higher speed or stronger air assist before reducing power.</p></article></div>
+        </section>
+
+        <section class="workspace-card" data-panel="journal_export">
+          <div class="section-head"><span class="step">J4</span><div><h1>Export Journal Entry</h1><p>Local export preview only. No files are written from this concept.</p></div></div>
+          <div class="manifest-box"><code>cork_material_test_2026-06-10.md</code><code>cork_material_test_results.csv</code><code>photos/overview.jpg</code><code>settings_snapshot.json</code></div>
+          <div class="decision-strip"><span class="decision-token">Markdown note</span><span class="decision-token">Settings hash</span><span class="decision-token good">Local only</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="tool_svg">
+          <div class="section-head"><span class="step">T1</span><div><h1>SVG Detail Checker</h1><p>Static feasibility readout for small engraving details, open contours, and risky layers.</p></div></div>
+          <div class="decision-strip"><span class="decision-token warn">Do not mill hairlines</span><span class="decision-token good">Laser fine details</span><span class="decision-token">Mill outer pocket</span><span class="decision-token">Retest text size</span></div>
+          <div class="tool-layout">
+            <div class="svg-preview-card">
+              <svg viewBox="0 0 360 260" class="mini-svg" role="img" aria-label="Mock SVG detail preview"><rect x="22" y="26" width="316" height="208" rx="18"/><path d="M72 184 C90 92 142 68 184 134 S260 190 288 72"/><circle cx="122" cy="104" r="22"/><circle cx="239" cy="154" r="11"/><path class="risk" d="M82 207 L312 207"/><path class="warn-line" d="M286 72 l22 -26"/></svg>
+            </div>
+            <div class="metric-grid">
+              <article><span>Min feature</span><strong>0.42 mm</strong><em>below target 0.60 mm</em></article>
+              <article><span>Open contours</span><strong>3</strong><em>likely engraving leaks</em></article>
+              <article><span>Layer count</span><strong>5</strong><em>cut, engrave, guide</em></article>
+              <article><span>Risk score</span><strong>medium</strong><em>review red layer</em></article>
+            </div>
+          </div>
+          <ul class="issue-list"><li>Layer "hairline detail" contains 0.18 mm strokes.</li><li>Three open paths detected near lower-right motif.</li><li>Bounding box fits current 100 x 100 mm stock with 8 mm margin.</li></ul>
+          <div class="design-fit"><article><span>Can it be milled?</span><strong>partly</strong><p>Main contour is reachable, but hairline detail should be laser-marked.</p></article><article><span>Design fit</span><strong>safe on 90 mm coaster</strong><p>Scale is acceptable if text stays above 3.5 mm height.</p></article></div>
+        </section>
+
+        <section class="workspace-card" data-panel="tool_hybrid">
+          <div class="section-head"><span class="step">T2</span><div><h1>Hybrid Planner</h1><p>Mock operation plan for combining CNC cleanup with laser marking and cutting.</p></div></div>
+          <div class="decision-strip"><span class="decision-token">CNC first</span><span class="decision-token good">Laser details second</span><span class="decision-token warn">Keep origin pin</span><span class="decision-token">Cut outline last</span></div>
+          <div class="timeline">
+            <article><span>01</span><strong>CNC pocket</strong><em>2.0 mm depth, 3.175 mm endmill, 18 min</em></article>
+            <article><span>02</span><strong>Manual handoff</strong><em>Keep origin pin, vacuum chips, refocus laser</em></article>
+            <article><span>03</span><strong>Laser engrave</strong><em>Offset fill, 3000 mm/min, 12% power, 9 min</em></article>
+            <article><span>04</span><strong>Laser cut outline</strong><em>NC output profile, verify S scale, 5 min</em></article>
+          </div>
+          <div class="hint-card"><strong>Why this order?</strong><p>Mill the shallow pocket before engraving so the laser darkens the final surface. Cut the outside last so the coaster does not shift.</p></div>
+        </section>
+
+        <section class="workspace-card" data-panel="tool_vbit">
+          <div class="section-head"><span class="step">T3</span><div><h1>V-bit / Tool Width Calculator</h1><p>Static calculator mock for estimating V-bit engraving width from angle and depth.</p></div></div>
+          <div class="decision-strip"><span class="decision-token warn">0.18 mm text too fine</span><span class="decision-token">0.52 mm groove</span><span class="decision-token good">Use for bold border</span></div>
+          <div class="tool-layout">
+            <div class="control-grid compact">
+              <label class="field"><span>V angle</span><input value="60"><em>deg</em></label>
+              <label class="field"><span>Cut depth</span><input value="0.45"><em>mm</em></label>
+              <label class="field"><span>Computed width</span><input value="0.52"><em>mm</em></label>
+            </div>
+            <div class="diagram-card"><svg viewBox="0 0 320 180"><path d="M56 42 L160 142 L264 42" class="vcut"/><path d="M112 96 H208" class="measure"/><text x="120" y="86">0.52 mm</text><text x="139" y="158">0.45 mm</text></svg></div>
+          </div>
+          <p class="soft-copy">Useful for checking whether narrow SVG strokes can be milled instead of laser-marked.</p>
+          <div class="hint-card"><strong>Failed-job hint</strong><p>If small text becomes fuzzy, do not force a deeper V-bit pass. Laser the text or enlarge it before milling.</p></div>
+        </section>
+
+        <section class="workspace-card" data-panel="tool_cost">
+          <div class="section-head"><span class="step">T4</span><div><h1>Cost Calculator</h1><p>Mock quote support using material, machine time, wear, setup, and margin.</p></div></div>
+          <table class="mini-table"><thead><tr><th>Item</th><th>Basis</th><th>Cost</th></tr></thead><tbody><tr><td>Cork sheet</td><td>100 x 100 mm</td><td>1.20 EUR</td></tr><tr><td>Laser time</td><td>14 min @ 0.35 EUR/min</td><td>4.90 EUR</td></tr><tr><td>Setup</td><td>8 min</td><td>5.60 EUR</td></tr><tr><td>Wear / filter</td><td>flat allowance</td><td>0.80 EUR</td></tr><tr class="total"><td>Total estimate</td><td>incl. 20% margin</td><td>15.00 EUR</td></tr></tbody></table>
+          <div class="decision-strip"><span class="decision-token good">Small batch ok</span><span class="decision-token warn">Setup dominates single piece</span><span class="decision-token">Quote 18 EUR with packaging</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="machine_profiles">
+          <div class="section-head"><span class="step">M1</span><div><h1>Machine Profiles</h1><p>Output assumptions grouped by controller and selected before file export.</p></div></div>
+          <div class="profile-cards"><article class="selected"><span>selected</span><strong>Makera 0-1</strong><p>S power 0.0-1.0, mm/min, MKS template.</p></article><article><span>available</span><strong>GRBL 0-1000</strong><p>S power 0-1000, NC output, sender preview required.</p></article><article><span>available</span><strong>Carvera</strong><p>Tool-safe headers, controlled spindle/laser mode.</p></article></div>
+          <div class="decision-strip"><span class="decision-token good">Makera selected</span><span class="decision-token warn">Verify NC sender scale</span><span class="decision-token">Keep machine notes in manifest</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="machine_output">
+          <div class="section-head"><span class="step">M2</span><div><h1>Output Profiles</h1><p>Static post-processor preview for file naming, headers, and power scaling.</p></div></div>
+          <div class="manifest-box"><code>MKS: cork_material_test.mks</code><code>NC: cork_material_test.nc</code><code>S map: 5% -> S0.05 / GRBL S50</code><code>Header: units mm, absolute mode, safety comment block</code></div>
+          <div class="decision-strip"><span class="decision-token">Preview both files</span><span class="decision-token good">MKS primary</span><span class="decision-token warn">NC needs S-scale check</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="machine_ha">
+          <div class="section-head"><span class="step">M3</span><div><h1>Home Assistant Monitor</h1><p>Local mock of a future status bridge. No network connection is made.</p></div></div>
+          <div class="entity-list"><article><span class="dot"></span><strong>laser_exhaust_fan</strong><em>on</em></article><article><span class="dot warn-dot"></span><strong>air_assist_pressure</strong><em>not connected</em></article><article><span class="dot"></span><strong>work_light</strong><em>ready</em></article><article><span class="dot warn-dot"></span><strong>job_done_notify</strong><em>mock only</em></article></div>
+          <div class="decision-strip"><span class="decision-token good">Exhaust expected</span><span class="decision-token warn">Air assist unknown</span><span class="decision-token">No network call</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="machine_maintenance">
+          <div class="section-head"><span class="step">M4</span><div><h1>Maintenance</h1><p>Mock service strip for lens, extraction, belts, and runtime reminders.</p></div></div>
+          <div class="service-list"><article><strong>Lens clean</strong><span>due in 2 runs</span></article><article><strong>Filter check</strong><span>last: 2026-06-03</span></article><article><strong>Belt tension</strong><span>ok, checked this month</span></article><article><strong>Runtime</strong><span>14.6 h since last service</span></article></div>
+          <div class="tool-wear-strip"><article><span>1 mm single flute</span><strong>145 min used</strong><em>replace before fine hardwood details</em></article><article><span>Laser lens</span><strong>4 jobs since clean</strong><em>check before long engraving</em></article><article><span>Filter</span><strong>71%</strong><em>ok for cork test</em></article></div>
+        </section>
+
+        <section class="workspace-card" data-panel="settings_app">
+          <div class="section-head"><span class="step">S1</span><div><h1>App Settings</h1><p>Static settings surface for units, default folder, and UI behavior.</p></div></div>
+          <div class="decision-strip"><span class="decision-token good">Local package</span><span class="decision-token">No persistence</span><span class="decision-token">No cloud account</span></div>
+          <div class="control-grid"><label class="field"><span>Units</span><input value="millimeters"></label><label class="field"><span>Default export</span><input value="Both MKS + NC"></label><label class="field"><span>Theme</span><input value="dark dashboard"></label></div>
+        </section>
+
+        <section class="workspace-card" data-panel="settings_api">
+          <div class="section-head"><span class="step">S2</span><div><h1>API Status</h1><p>Shows the intended JSON API readiness without calling a backend.</p></div></div>
+          <div class="metric-grid"><article><span>config</span><strong>mock ready</strong><em>default settings shape</em></article><article><span>preview</span><strong>mock ready</strong><em>geometry readout</em></article><article><span>generate</span><strong>disabled</strong><em>no files written</em></article></div>
+          <div class="decision-strip"><span class="decision-token good">Local JSON first</span><span class="decision-token">Preview before generate</span><span class="decision-token warn">No backend in concept</span></div>
+        </section>
+
+        <section class="workspace-card" data-panel="settings_update">
+          <div class="section-head"><span class="step">S3</span><div><h1>Update Check</h1><p>Static local package concept. No internet check is performed.</p></div></div>
+          <p class="warning-inline">Offline package mode: testers compare concepts locally and return Markdown feedback.</p>
+        </section>
+
+        <section class="workspace-card" data-panel="settings_about">
+          <div class="section-head"><span class="step">S4</span><div><h1>About</h1><p>Concept A is a dedicated desktop-program shell around the stable v1.x core.</p></div></div>
+        </section>
+      </main>
+
+      <aside class="right-rail">
+        <section class="preview-card">
+          <div class="preview-head"><strong>Modern Preview</strong><span id="previewStatus" class="pill warn">preview required</span></div>
+          <div class="preview-toolbar"><button>Fit</button><button>Zoom</button><button>Center</button></div>
+          <svg class="preview" viewBox="0 0 420 520" role="img" aria-label="Mock laser preview">
+            <defs>
+              <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(95,170,255,.18)" stroke-width="1"/></pattern>
+              <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <rect width="420" height="520" rx="22" fill="url(#smallGrid)"/>
+            <text x="22" y="32">Y</text><text x="386" y="492">X</text>
+            <rect id="stockRect" x="55" y="65" width="310" height="380" rx="14" class="stock"/>
+            <rect id="safeRect" x="82" y="94" width="256" height="322" rx="10" class="safe"/>
+            <g id="previewGrid" filter="url(#glow)"></g>
+            <path class="travel" d="M90 438 C155 385 245 440 325 378"/>
+          </svg>
+          <div class="layer-row"><span>Grid</span><span>Labels</span><span>Bounds</span><span>Travel</span></div>
+        </section>
+        <section class="warn-card">
+          <strong>Front warnings</strong>
+          <p>Verify generated files before machine use. This prototype has no machine control and no file output.</p>
+        </section>
+        <section class="intelligence-card">
+          <strong id="contextTitle">Job intelligence</strong>
+          <ul id="contextList"><li>Manifest snapshot</li><li>Result log entry</li><li>Cost estimate</li><li>HA monitor link</li></ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

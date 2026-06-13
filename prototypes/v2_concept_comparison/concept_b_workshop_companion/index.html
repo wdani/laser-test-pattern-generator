@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CNC/Laser Workshop Companion - Jobs Concept</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="module-realism.css">
+</head>
+<body>
+  <div class="companion">
+    <header class="hero-bar">
+      <div class="identity">
+        <div class="mark"></div>
+        <div>
+          <h1>CNC/Laser Workshop Companion</h1>
+          <p>Local workshop jobs plus focused helpers - not a CAM replacement</p>
+        </div>
+      </div>
+      <nav class="global-nav">
+        <button class="active" data-view="dashboard">Dashboard</button>
+        <button data-view="job">Current Job</button>
+        <button data-view="modules">Helpers</button>
+        <button data-view="machine">Machine</button>
+        <button data-view="settings">Settings</button>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <aside class="job-rail workshop-rail">
+        <div class="rail-title">
+          <span>Workshop jobs</span>
+          <strong>Active workflows + helpers</strong>
+        </div>
+        <div class="queue-list">
+          <button class="queue-job active" data-job="laserPattern"><span class="status-chip">active</span><strong>Laser Test Pattern</strong><em>Find material settings</em></button>
+          <button class="queue-job" data-job="nameplate"><span class="status-chip">active</span><strong>Parametric Design</strong><em>Nameplate from parameters</em></button>
+          <button class="queue-job" data-job="hybridCoaster"><span class="status-chip warn">helper</span><strong>Hybrid Planner</strong><em>CNC pocket + laser detail</em></button>
+          <button class="queue-job" data-job="failedJob"><span class="status-chip muted">helper</span><strong>Failed Job Analysis</strong><em>Burned, too light, fuzzy</em></button>
+          <button class="queue-job" data-job="bugreport"><span class="status-chip muted">helper</span><strong>Bugreport Package</strong><em>Clean report for beta issues</em></button>
+        </div>
+        <section class="rail-card material-memory">
+          <span>Job idea</span>
+          <strong id="railJobIdea">Laser Test Pattern</strong>
+          <div class="memory-lines">
+            <p id="railJobWhy">A concrete job that existing tools often make too technical or scattered.</p>
+            <p id="railJobTools">Uses: Material Journal, Output Profile, Preflight.</p>
+          </div>
+        </section>
+        <section class="rail-card today-card">
+          <span>Today in the workshop</span>
+          <ul><li>Open check: air assist unknown</li><li>Next idea: parametric nameplate with Romy</li><li>Maintenance: lens clean due in 2 runs</li></ul>
+        </section>
+      </aside>
+
+      <section class="stage">
+        <div class="view active" data-panel="dashboard">
+          <div class="headline"><span>Workshop overview</span><h2>Choose an active workflow, then use the right helpers.</h2><p>Concept B is a workshop app with concrete job types. Laser Test Pattern and Parametric Design are active workflows; calculators, safety, journal, and diagnostics support the selected job.</p></div>
+          <div class="job-type-grid">
+            <article><span>Material job</span><strong>Laser Test Pattern</strong><p>Find reliable power/speed settings and save them to the material memory.</p></article>
+            <article><span>Active generator job</span><strong>Parametric Design</strong><p>Create a simple design from dimensions, text, motif, pattern, and operation intent.</p></article>
+            <article><span>Helper job</span><strong>Hybrid Planner</strong><p>Decide what gets milled, what gets lasered, and which step comes first.</p></article>
+            <article><span>Helper job</span><strong>Failed Job Analysis</strong><p>Turn a bad result into concrete next settings: speed, power, focus, air assist, or cutter.</p></article>
+            <article><span>Support helper</span><strong>Bugreport Package</strong><p>Collect app version, machine, files, screenshots, and reproduction steps.</p></article>
+          </div>
+          <div class="module-board">
+            <article class="tile active"><span>Active workflow</span><strong>Laser Test Pattern</strong><p>The first active job type and source of the material-test preview.</p></article>
+            <article class="tile active design-tile"><span>Active workflow</span><strong>Parametric Design</strong><p>Nameplate/pattern generator concept with SVG preview and future layers.</p></article>
+            <article class="tile planned"><span>Helper</span><strong>Material Journal</strong><p>Stores best cells, photos, notes, and repeatability.</p></article>
+            <article class="tile planned"><span>Tool</span><strong>SVG Detail Checker</strong><p>Supports generator and hybrid jobs when an imported design is involved.</p></article>
+            <article class="tile planned"><span>Tool</span><strong>V-bit Calculator</strong><p>Helps decide whether text and borders can be milled.</p></article>
+            <article class="tile planned"><span>Tool</span><strong>Cost Calculator</strong><p>Uses the selected job's material, time, setup, and risk.</p></article>
+            <article class="tile planned"><span>Tool</span><strong>Preflight Checklist</strong><p>Checks material safety, output scale, air assist, and machine readiness.</p></article>
+          </div>
+        </div>
+
+        <div class="view" data-panel="job">
+          <div class="headline"><span id="jobKicker">Current job</span><h2 id="jobTitle">Laser Test Pattern</h2><p id="jobSummary">Find reliable laser settings for cork and save the best result as material memory.</p></div>
+          <div class="current-job-layout">
+            <section class="dossier-card job-brief-card">
+              <span>Job brief</span>
+              <h3 id="jobGoal">Find repeatable cork engraving settings</h3>
+              <dl id="briefFacts" class="brief-facts"></dl>
+            </section>
+            <section class="dossier-card settings-card">
+              <span id="settingsLabel">Laser Test Pattern settings</span>
+              <div id="settingsGrid" class="settings-grid"></div>
+            </section>
+            <section class="dossier-card">
+              <span>Making plan</span>
+              <ol id="jobPlan" class="plan-list"></ol>
+            </section>
+            <section class="dossier-card">
+              <span>Tools for this job</span>
+              <div id="jobTools" class="tool-chip-grid"></div>
+            </section>
+            <section class="dossier-card">
+              <span>Readiness</span>
+              <div id="readinessGrid" class="readiness-grid"></div>
+            </section>
+            <section class="dossier-card">
+              <span>Memory / output</span>
+              <div id="memoryGrid" class="repeat-grid"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="view" data-panel="modules">
+          <div class="headline"><span>Tools and assistants</span><h2>Helpers for the selected job, not separate projects.</h2><p>These tools are supporting surfaces. They help the current job with feasibility, calculation, safety, documentation, and export decisions.</p></div>
+          <div class="module-cockpit">
+            <article class="cockpit-card wide material-journal-card"><div class="card-top"><div><span class="status-chip">Memory</span><h3>Material Journal / Laser Test Logger</h3></div><strong>used by test jobs</strong></div><div class="manifest-preview"><code>cork_fine_7x7_result.md</code><div><span>Best cell</span><b>3000 mm/min / 12%</b></div><div><span>Photo proof</span><b>overview + macro pending</b></div><div><span>Reuse confidence</span><b>medium-high</b></div></div></article>
+            <article class="cockpit-card"><div class="card-top"><div><span class="status-chip warn">3 warnings</span><h3>SVG Detail Checker</h3></div></div><div class="mini-vector"><span></span><span></span><span class="hot"></span><span></span><span></span></div><dl class="compact-facts"><div><dt>Open contours</dt><dd>12</dd></div><div><dt>Min feature</dt><dd>0.18 mm</dd></div><div><dt>Layer count</dt><dd>4</dd></div></dl><p>Supports generator and hybrid jobs when a design needs feasibility review.</p></article>
+            <article class="cockpit-card"><div class="card-top"><div><span class="status-chip">Calculator</span><h3>V-bit / Tool Width Calculator</h3></div><strong>1.16 mm</strong></div><div class="vbit-mini"><svg viewBox="0 0 260 120" aria-hidden="true"><path d="M52 22 130 102 208 22"/><line x1="76" y1="96" x2="184" y2="96"/><text x="94" y="88">90 deg x 0.58 mm</text></svg></div><p>Helps decide whether text should be V-bit engraved or laser-marked.</p></article>
+            <article class="cockpit-card"><div class="card-top"><div><span class="status-chip">Estimate</span><h3>Cost Calculator</h3></div><strong>CHF 18.40</strong></div><div class="cost-lines"><span>Material</span><b>CHF 2.80</b><span>Machine time</span><b>CHF 7.10</b><span>Setup</span><b>CHF 5.00</b><span>Margin</span><b>CHF 3.50</b></div><p>Uses the selected job's material, runtime, setup, wear, and quote risk.</p></article>
+            <article class="cockpit-card"><div class="card-top"><div><span class="status-chip">Preflight</span><h3>Safety Checklist</h3></div><strong>local only</strong></div><div class="preflight-grid"><span class="pass">Material known</span><span class="review">Air assist review</span><span class="pass">No direct send</span><span class="review">Output scale check</span></div><p>Prevents the app from feeling like it can blindly run a machine.</p></article>
+            <article class="cockpit-card"><div class="card-top"><div><span class="status-chip muted">Report</span><h3>Bugreport Builder</h3></div><strong>beta helper</strong></div><p>Collects app version, machine profile, screenshots, output names, expected behavior, actual behavior, and reproduction steps.</p></article>
+          </div>
+        </div>
+
+        <div class="view" data-panel="machine">
+          <div class="headline"><span>Machine</span><h2>Profiles, local monitor mock, and maintenance context.</h2><p>The machine area supports jobs with profile assumptions and readiness state. It does not control hardware.</p></div>
+          <div class="machine-dashboard">
+            <section class="profile-detail"><span class="status-chip">Selected</span><h3>Makera Laser Module</h3><dl class="compact-facts"><div><dt>Power scale</dt><dd>0.00-1.00</dd></div><div><dt>Units</dt><dd>mm/min</dd></div><div><dt>Output</dt><dd>MKS + NC</dd></div><div><dt>Origin</dt><dd>front-left</dd></div></dl></section>
+            <section class="file-profiles"><article><span>MKS</span><strong>current_job.mks</strong><p>Header adds machine notes, material label, and profile hash.</p></article><article><span>NC</span><strong>current_job.nc</strong><p>S values are mapped from 0-1 source values to the selected post profile.</p></article><article><span>Post check</span><strong>No automatic send</strong><p>Files remain local and must be opened manually in the machine workflow.</p></article></section>
+            <section class="monitor-card"><div class="card-top"><div><span class="status-chip muted">Not connected</span><h3>Home Assistant Monitor</h3></div></div><div class="monitor-strip"><span>Air assist <b>unknown</b></span><span>Exhaust fan <b>off</b></span><span>Work light <b>on</b></span><span>Door sensor <b>unknown</b></span></div></section>
+            <section class="maintenance-card"><div class="card-top"><div><span class="status-chip warn">Review soon</span><h3>Maintenance + Tool Wear</h3></div><strong>12.4 h runtime</strong></div><div class="maintenance-strip"><span>Lens cleaned 4 jobs ago</span><span>Filter 71%</span><span>1 mm cutter 145 min</span><span>Air nozzle due next session</span></div></section>
+          </div>
+        </div>
+
+        <div class="view" data-panel="settings"><div class="headline"><span>Settings</span><h2>Static local prototype settings</h2><p>No persistence, no backend, no build system, no generation, no cloud dependency.</p></div></div>
+      </section>
+
+      <aside class="inspector">
+        <section class="preview-box"><div class="box-head"><strong id="previewTitle">Laser Test Pattern preview</strong><span id="bounds" class="status warn">margin low</span></div><svg viewBox="0 0 420 420" class="job-preview"><defs><pattern id="gridBg" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0H0V18" fill="none" stroke="rgba(110,180,255,.14)"/></pattern><filter id="glow"><feGaussianBlur stdDeviation="2"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="420" height="420" rx="24" fill="url(#gridBg)"/><rect x="52" y="54" width="316" height="312" rx="18" class="stock"/><rect x="84" y="88" width="252" height="244" rx="12" class="safe"/><g id="tiles" filter="url(#glow)"></g><path class="travel" d="M78 350c72-56 130 20 210-50 34-30 58-44 76-47"/></svg><div class="preview-actions"><button>Fit</button><button>Layers</button><button>Warnings</button></div></section>
+        <section class="output-box"><strong>Output plan</strong><div class="format-tabs"><button class="active" data-output="Both">Both</button><button data-output="MKS">MKS</button><button data-output="NC">NC</button></div><code id="mks">laser_test_pattern_cork.mks</code><code id="nc">laser_test_pattern_cork.nc</code><button id="mockGenerate">Mock generate message</button><p id="mockMessage">No files are generated.</p></section>
+        <section class="warnings"><strong>Front warnings</strong><ul id="warningList"><li>Air assist is not confirmed.</li><li>NC S-scale must be checked before use.</li><li>No machine control in prototype.</li></ul></section>
+      </aside>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
